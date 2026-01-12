@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Randseed Keno v16 - Wide Balance</title>
+    <title>Randseed Keno v20 - Large Fonts</title>
     <style>
         :root {
             /* WARMER THEME */
@@ -13,7 +13,6 @@
             --col-blue: #3a86ff;
             --col-gold: #ffd700;
             --col-red:  #ff4444;
-            --col-dark: #4a4846; 
             --col-profit: #39ff14;
             --col-loss:   #ff4444;
             --text-white: #f0f0f0; 
@@ -62,19 +61,17 @@
             display: flex; justify-content: flex-end; flex-shrink: 0;
         }
         
-        /* UPDATED: Wide Balance Trigger */
         .balance-dropdown-trigger {
-            display: flex; align-items: center; justify-content: space-between; /* Spreads content */
+            display: flex; align-items: center; justify-content: space-between;
             gap: 8px;
             background: var(--panel-color); padding: 8px 15px;
             border-radius: 8px; border: 1px solid #3e3c3a; cursor: pointer;
-            width: 300px; /* MATCHES HISTORY PANEL WIDTH */
-            max-width: 100%; /* Safety for small screens */
+            width: 300px; max-width: 100%;
         }
         
-        .bal-label { font-size: 0.75rem; color: #888; font-weight: bold; }
-        .bal-amount { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); letter-spacing: 0.5px; }
-        .bal-arrow { font-size: 0.7rem; color: #888; transition: transform 0.3s; }
+        .bal-label { font-size: 0.8rem; color: #888; font-weight: bold; }
+        .bal-amount { font-size: 1.4rem; font-weight: 800; color: var(--accent-color); letter-spacing: 0.5px; }
+        .bal-arrow { font-size: 0.8rem; color: #888; transition: transform 0.3s; }
         .bal-arrow.rotate { transform: rotate(180deg); }
 
         .history-panel {
@@ -85,7 +82,7 @@
             opacity: 0; pointer-events: none;
         }
         .history-panel.open { max-height: 350px; opacity: 1; pointer-events: auto; margin-top: 5px; }
-        .hist-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px; border-bottom: 1px solid #3e3c3a; font-size: 0.85rem; color: #ccc; }
+        .hist-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px; border-bottom: 1px solid #3e3c3a; font-size: 0.9rem; color: #ccc; }
         .net-pos { color: var(--col-profit); font-weight: bold; }
         .net-neg { color: var(--col-loss); }
 
@@ -111,34 +108,49 @@
 
         .ball {
             aspect-ratio: 1; background: #3a3836; border: 2px solid #4a4846; border-radius: 50%;
-            color: #888; font-weight: bold; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; font-size: 13px;
+            color: #ccc; font-weight: 800; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 18px; /* INCREASED from 13px */
             transition: transform 0.1s; position: relative;
         }
         .ball.active-pick { background: var(--col-blue) !important; color: white !important; border-color: #88ccff !important; box-shadow: 0 0 8px rgba(58, 134, 255, 0.6) !important; z-index: 100; }
         .ball.hist-gold { background: var(--col-gold); color: black; border-color: #fff; box-shadow: 0 0 8px var(--col-gold); font-weight: 900; z-index: 10; }
         .ball.hist-red { background: #3a0000; border-color: var(--col-red); color: var(--col-red); opacity: 0.9; }
-        .ball.hist-drawn { background: var(--col-dark); color: white; border-color: #666; }
+        
+        /* High Contrast Drawn */
+        .ball.hist-drawn { 
+            background: #656361; 
+            color: #ffffff; 
+            border-color: #aaaaaa; 
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.1);
+            z-index: 5;
+        }
+        
         .ball.hist-gold.pulsing { animation: winPulse 1.5s infinite; }
         @keyframes winPulse { 0% { box-shadow: 0 0 5px var(--col-gold); } 50% { box-shadow: 0 0 15px var(--col-gold); } 100% { box-shadow: 0 0 5px var(--col-gold); } }
 
         /* PAYTABLE */
         .paytable-wrapper {
-            background: var(--panel-color); padding: 8px; border-radius: 12px;
+            background: var(--panel-color); padding: 12px 8px; border-radius: 12px;
             border: 1px solid #3e3c3a; margin-bottom: 8px;
             display: flex; flex-direction: column; justify-content: center;
-            min-height: 50px;
+            min-height: 60px;
         }
-        .status-text { text-align: center; color: #888; font-size: 0.8rem; margin-bottom: 4px; }
-        .pay-pills-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+        .status-text { 
+            text-align: center; color: #ffffff; font-size: 1.3rem; font-weight: bold; /* INCREASED from 0.8rem */
+            margin-bottom: 8px; min-height: 1.2em; transition: color 0.2s;
+        }
+        .status-warn { color: #ffaa00 !important; font-weight: bold; animation: shake 0.4s; }
+        @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-5px)} 100%{transform:translateX(0)} }
+
+        .pay-pills-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
         .pay-pill {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: transparent; padding: 2px 5px; border-radius: 6px; min-width: 40px;
+            background: transparent; padding: 2px 5px; border-radius: 6px; min-width: 45px;
         }
-        .pay-mult { font-size: 0.75rem; font-weight: bold; color: #fff; margin-bottom: 2px; }
+        .pay-mult { font-size: 1rem; font-weight: bold; color: #fff; margin-bottom: 4px; } /* INCREASED */
         .pay-hit-circle {
-            width: 20px; height: 20px; border-radius: 50%;
-            background: #3a3836; color: #888; font-size: 0.7rem; font-weight: bold;
+            width: 28px; height: 28px; border-radius: 50%; /* INCREASED */
+            background: #3a3836; color: #888; font-size: 1rem; font-weight: bold; /* INCREASED */
             display: flex; align-items: center; justify-content: center;
             border: 1px solid #4a4846; transition: all 0.2s;
         }
@@ -155,21 +167,29 @@
         .slider-row {
             display: flex; align-items: center; justify-content: space-between;
             background: #2f2d2b; padding: 5px 15px; border-radius: 10px; border: 1px solid #3e3c3a;
-            height: 44px;
+            height: 50px; transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .slider-label { font-size: 0.7rem; color: #888; font-weight: bold; text-transform:uppercase; letter-spacing:0.5px; margin-right: 10px; }
+        .slider-row.warn { border-color: #ffaa00; box-shadow: 0 0 10px rgba(255, 170, 0, 0.3); }
+
+        .slider-label { font-size: 0.8rem; color: #888; font-weight: bold; text-transform:uppercase; letter-spacing:0.5px; margin-right: 10px; }
         input[type=range] { -webkit-appearance: none; flex: 1; background: transparent; height: 100%; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%;
-            background: var(--col-blue); cursor: pointer; margin-top: -9px;
+            -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%;
+            background: var(--col-blue); cursor: pointer; margin-top: -11px;
             box-shadow: 0 0 5px rgba(58, 134, 255, 0.8); border: 2px solid white;
         }
+        input[type=range].slider-off::-webkit-slider-thumb {
+            background: #666; box-shadow: none; border-color: #888;
+        }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #444; border-radius: 2px; }
+        
         .slider-val-box {
-            background:#3a3836; width:26px; height:26px; border-radius:6px; 
+            background:#3a3836; width:40px; height:32px; border-radius:6px; 
             display:flex; align-items:center; justify-content:center; 
             border:1px solid #4a4846; margin-left: 10px;
         }
+        .slider-val-text { font-weight:bold; font-size:1.2rem; color: var(--col-blue); } /* INCREASED */
+        .slider-val-off { color: #888; font-size: 0.8rem; letter-spacing: 1px; }
 
         .buttons-row {
             display: flex; gap: 6px; 
@@ -177,27 +197,27 @@
             height: 52px; 
         }
         
-        button { border-radius: 10px; border:none; font-weight:bold; cursor:pointer; font-size: 0.95rem; position: relative; overflow: hidden; }
+        button { border-radius: 10px; border:none; font-weight:bold; cursor:pointer; font-size: 1rem; position: relative; overflow: hidden; }
         button:active { transform: scale(0.96); filter: brightness(0.9); }
 
         .btn-bet-grp {
             display: flex; gap: 2px; background: #3a3836; border-radius: 10px; padding: 2px;
             flex-shrink: 0;
         }
-        .btn-bet-act { background: #4a4846; color: white; width: 35px; border-radius: 8px; font-size: 1.1rem;}
-        .btn-bet-val { background: transparent; color: #ddd; width: 60px; font-size: 0.8rem; cursor: default; }
+        .btn-bet-act { background: #4a4846; color: white; width: 35px; border-radius: 8px; font-size: 1.2rem;}
+        .btn-bet-val { background: transparent; color: #ddd; width: 60px; font-size: 0.95rem; cursor: default; } /* INCREASED */
 
         .btn-clear { background: #3a3836; color: white; width: 45px; flex-shrink: 0; font-size: 1.2rem; }
         
         .btn-auto {
             background: #3a3836; color: white; border: 1px solid #4a4846;
-            flex: 1.2; font-size: 0.9rem; line-height: 1.1; 
+            flex: 1.2; font-size: 0.95rem; line-height: 1.1; 
         }
         .btn-auto.active { background: var(--col-blue); border-color: #88ccff; color: white; }
 
         .btn-play { 
             background: linear-gradient(135deg, #39ff14, #008f09); color: white; 
-            flex: 1.8; font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            flex: 1.8; font-size: 1.4rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             box-shadow: 0 4px 10px rgba(57, 255, 20, 0.2); letter-spacing: 1px;
         }
         .btn-play:disabled { background: #444; cursor: not-allowed; color: #888; box-shadow:none; }
@@ -224,6 +244,7 @@
             playTone: function(f, t, d, v=0.1) { if(this.muted) return; if(!this.ctx) this.init(); const o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); },
             click: function() { this.playTone(800,'sine',0.1,0.05); },
             toggle: function() { this.playTone(600,'triangle',0.1,0.05); },
+            error: function() { this.playTone(150, 'sawtooth', 0.2, 0.1); this.playTone(100, 'sawtooth', 0.2, 0.1); },
             pop: function() { if(this.muted)return; if(!this.ctx)this.init(); const o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.frequency.setValueAtTime(200,this.ctx.currentTime); o.frequency.exponentialRampToValueAtTime(600,this.ctx.currentTime+0.1); g.gain.setValueAtTime(0.1,this.ctx.currentTime); g.gain.linearRampToValueAtTime(0,this.ctx.currentTime+0.1); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+0.1); },
             win: function() { if(this.muted)return; setTimeout(()=>this.playTone(523.25,'sine',0.4,0.1),0); setTimeout(()=>this.playTone(659.25,'sine',0.4,0.1),100); setTimeout(()=>this.playTone(783.99,'sine',0.8,0.1),200); },
             slide: function() { this.playTone(400,'sine',0.05,0.02); }
@@ -254,7 +275,6 @@
 
     <!-- MAIN GAME AREA -->
     <div class="game-layout">
-        
         <!-- GRID -->
         <div class="grid-container">
             <div class="keno-grid" id="grid"></div>
@@ -269,28 +289,30 @@
         <!-- CONTROLS -->
         <div class="controls-wrapper">
             <!-- Slider -->
-            <div class="slider-row">
+            <div class="slider-row" id="sliderRow">
                 <span class="slider-label">Random</span>
-                <input type="range" id="pickSlider" min="1" max="10" value="4" oninput="onSliderInput(this.value)" onchange="onSliderChange(this.value)">
-                <div class="slider-val-box"><span id="pickVal" style="color:var(--col-blue); font-weight:bold; font-size:1rem;">4</span></div>
+                <input type="range" id="pickSlider" min="0" max="10" value="4" 
+                       oninput="onSliderInput(this.value)" 
+                       onchange="onSliderChange(this.value)">
+                <div class="slider-val-box" id="sliderValBox">
+                    <span id="pickVal" class="slider-val-text">4</span>
+                </div>
             </div>
 
             <!-- Single Row Buttons -->
             <div class="buttons-row">
-                <!-- Bet Group -->
                 <div class="btn-bet-grp">
                     <button class="btn-bet-act" onclick="changeBet(-1)">-</button>
                     <button class="btn-bet-val" id="betDisplay">$1.00</button>
                     <button class="btn-bet-act" onclick="changeBet(1)">+</button>
                 </div>
                 
-                <!-- Clear -->
                 <button class="btn-clear" onclick="clearSelection()">🗑️</button>
                 
-                <!-- Auto -->
-                <button class="btn-auto" id="btnAuto" onclick="toggleAutoPlay()">Auto</button>
+                <!-- Random Auto -->
+                <button class="btn-auto" id="btnAuto" onclick="toggleAutoPlay()">Random Auto</button>
                 
-                <!-- PLAY (Big) -->
+                <!-- PLAY -->
                 <button class="btn-play" id="playBtn" onclick="manualPlay()">PLAY</button>
             </div>
         </div>
@@ -299,8 +321,8 @@
     <!-- OVERLAY -->
     <div id="winOverlay" class="win-overlay">
         <h2 style="color:white; margin:0; text-transform:uppercase; letter-spacing:2px; font-size: 1.5rem;">You Won</h2>
-        <div id="winAmountDisplay" style="font-size:2.5rem; color:var(--accent-color); font-weight:900; margin:10px 0;">$0.00</div>
-        <div style="font-size:0.8rem; color:#888; margin-top:5px;">Tap anywhere to close</div>
+        <div id="winAmountDisplay" style="font-size:4rem; color:var(--accent-color); font-weight:900; margin:10px 0;">$0.00</div>
+        <div style="font-size:0.9rem; color:#888; margin-top:5px;">Tap anywhere to close</div>
     </div>
 
     <script>
@@ -325,8 +347,30 @@
         }
 
         const TOTAL_NUMBERS = 40, DRAW_SIZE = 10;
-        const PAYTABLES = { 1:{1:1.8}, 2:{2:9.0}, 3:{3:24,2:2}, 4:{4:120,3:5,2:1.5}, 5:{5:450,4:12,3:1.8}, 6:{6:1600,5:35,4:3,3:1}, 7:{7:5000,6:100,5:10,4:2,3:1}, 8:{8:2000,7:200,6:50,5:10,4:3,0:25}, 9:{9:3000,8:300,7:40,6:10,5:3,0:2}, 10:{10:5000,9:2000,8:400,7:70,6:15,5:2,0:1} };
-        let state = { balance: 1000.00, bet: 1.00, selected: [], lastSelected: [], lastDrawn: [], isPlaying: false, isAutoPlaying: false, pickMode: 'random', sliderValue: 4, history: [] };
+        
+        // --- CUSTOM PAYTABLE CONFIGURATION ---
+        const PAYTABLES = { 
+            1: {1:3.5}, 
+            2: {2:16}, 
+            3: {2:0.5, 3:75}, 
+            4: {3:8, 4:240}, 
+            5: {3:3, 4:45, 5:430}, 
+            6: {4:9, 5:330, 6:680}, 
+            7: {4:5, 5:80, 6:380, 7:770}, 
+            8: {4:3.5, 5:17, 6:250, 7:550, 8:850}, 
+            9: {4:3, 5:8, 6:40, 7:450, 8:750, 9:950}, 
+            10: {4:2.5, 5:6, 6:10, 7:50, 8:450, 9:750, 10:1000} 
+        };
+        
+        let state = { 
+            balance: 1000.00, 
+            bet: 1.00, 
+            selected: [], lastSelected: [], lastDrawn: [], 
+            isPlaying: false, isAutoPlaying: false, 
+            pickMode: 'random', 
+            sliderValue: 4, 
+            history: [] 
+        };
 
         window.onload = function() { initGrid(); generateRandomSelection(4); updateBalance(); };
 
@@ -338,20 +382,138 @@
                 gridEl.appendChild(btn);
             }
         }
-        function onSliderInput(val) { document.getElementById('pickVal').innerText = val; AudioSys.slide(); }
-        function onSliderChange(val) { AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); state.sliderValue = parseInt(val); state.pickMode = 'random'; generateRandomSelection(state.sliderValue); }
-        function generateRandomSelection(qty) { state.selected = []; while(state.selected.length < qty) { let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1; if(!state.selected.includes(r)) state.selected.push(r); } updateUI(); }
+
+        // SLIDER UPDATE LOGIC
+        function onSliderInput(val) { 
+            AudioSys.slide();
+            const num = parseInt(val);
+            const valSpan = document.getElementById('pickVal');
+            const slider = document.getElementById('pickSlider');
+            
+            // Clear warning
+            document.getElementById('sliderRow').classList.remove('warn');
+            const statusEl = document.getElementById('statusMsg');
+            if(statusEl.innerText.includes("Select Random")) statusEl.innerText = "Pick 1-10 Numbers";
+            statusEl.classList.remove('status-warn');
+
+            if (num === 0) {
+                valSpan.innerText = "OFF";
+                valSpan.className = "slider-val-off";
+                slider.classList.add("slider-off");
+            } else {
+                valSpan.innerText = num;
+                valSpan.className = "slider-val-text";
+                slider.classList.remove("slider-off");
+            }
+        }
+
+        function onSliderChange(val) { 
+            AudioSys.click(); 
+            if(state.isAutoPlaying) stopAutoPlay();
+            
+            const num = parseInt(val);
+            if (num === 0) {
+                state.pickMode = 'manual';
+                state.selected = [];
+                updateUI();
+            } else {
+                state.sliderValue = num; 
+                state.pickMode = 'random'; 
+                generateRandomSelection(state.sliderValue);
+            }
+        }
+
+        function generateRandomSelection(qty) { 
+            state.selected = []; 
+            while(state.selected.length < qty) { 
+                let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1; 
+                if(!state.selected.includes(r)) state.selected.push(r); 
+            } 
+            updateUI(); 
+        }
+
         function toggleHistory(e) { if(e) e.stopPropagation(); AudioSys.click(); document.getElementById('historyPanel').classList.toggle('open'); document.getElementById('balArrow').classList.toggle('rotate'); }
-        function toggleNumber(num) { if (state.isPlaying) return; AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); state.pickMode = 'manual'; const idx = state.selected.indexOf(num); if (idx > -1) state.selected.splice(idx, 1); else if (state.selected.length < 10) state.selected.push(num); updateUI(); }
-        function clearSelection() { if (state.isPlaying) return; AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); state.selected = []; state.pickMode = 'manual'; updateUI(); }
+
+        function toggleNumber(num) { 
+            if (state.isPlaying) return; 
+            AudioSys.click(); 
+            if(state.isAutoPlaying) stopAutoPlay(); 
+            switchToManualMode();
+            const idx = state.selected.indexOf(num); 
+            if (idx > -1) state.selected.splice(idx, 1); 
+            else if (state.selected.length < 10) state.selected.push(num); 
+            updateUI(); 
+        }
+
+        function switchToManualMode() {
+            state.pickMode = 'manual';
+            const slider = document.getElementById('pickSlider');
+            slider.value = 0;
+            slider.classList.add("slider-off");
+            const valSpan = document.getElementById('pickVal');
+            valSpan.innerText = "OFF";
+            valSpan.className = "slider-val-off";
+        }
+
+        function clearSelection() { 
+            if (state.isPlaying) return; 
+            AudioSys.click(); 
+            if(state.isAutoPlaying) stopAutoPlay(); 
+            state.selected = []; 
+            switchToManualMode();
+            updateUI(); 
+        }
+
         function changeBet(dir) { if (state.isPlaying) return; AudioSys.click(); const a = [1, 2, 5, 10, 20]; let i = a.indexOf(state.bet); if (dir === 1 && i < a.length - 1) state.bet = a[i + 1]; if (dir === -1 && i > 0) state.bet = a[i - 1]; document.getElementById('betDisplay').innerText = `$${state.bet.toFixed(2)}`; updateUI(); }
+        
         function toggleAutoPlay() { AudioSys.toggle(); if(state.isAutoPlaying) stopAutoPlay(); else startAutoPlay(); }
-        function startAutoPlay() { if (state.balance < state.bet) return; if (state.selected.length === 0) generateRandomSelection(state.sliderValue); state.isAutoPlaying = true; document.getElementById('btnAuto').innerText = "Stop"; document.getElementById('btnAuto').classList.add('active'); playGame(); }
-        function stopAutoPlay() { state.isAutoPlaying = false; document.getElementById('btnAuto').innerText = "Auto"; document.getElementById('btnAuto').classList.remove('active'); }
+        
+        function startAutoPlay() { 
+            // STRICT CHECK: If Slider is 0, DO NOT START.
+            const sliderVal = parseInt(document.getElementById('pickSlider').value);
+            if (sliderVal === 0) {
+                AudioSys.error();
+                const statusEl = document.getElementById('statusMsg');
+                statusEl.innerText = "⚠ Select Random Amount";
+                statusEl.classList.remove('status-warn'); void statusEl.offsetWidth; statusEl.classList.add('status-warn');
+                const sliderRow = document.getElementById('sliderRow');
+                sliderRow.classList.remove('warn'); void sliderRow.offsetWidth; sliderRow.classList.add('warn');
+                return; 
+            }
+
+            if (state.balance < state.bet) return; 
+            state.pickMode = 'random';
+            state.sliderValue = sliderVal;
+            if (state.selected.length === 0) generateRandomSelection(state.sliderValue); 
+            state.isAutoPlaying = true; 
+            document.getElementById('btnAuto').innerText = "Stop"; 
+            document.getElementById('btnAuto').classList.add('active'); 
+            playGame(); 
+        }
+        
+        function stopAutoPlay() { 
+            state.isAutoPlaying = false; 
+            document.getElementById('btnAuto').innerText = "Random Auto"; 
+            document.getElementById('btnAuto').classList.remove('active'); 
+        }
+        
         function manualPlay() { AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); playGame(); }
 
         async function playGame() {
-            if (state.pickMode === 'random') { generateRandomSelection(state.sliderValue); await new Promise(r => setTimeout(r, 100)); }
+            // 1. SMART REPLAY
+            if (!state.isAutoPlaying && state.pickMode === 'manual' && state.selected.length === 0 && state.lastSelected.length > 0) {
+                state.selected = [...state.lastSelected];
+                updateUI();
+                await new Promise(r => setTimeout(r, 200));
+            }
+            // 2. RANDOM MODE
+            else if (state.pickMode === 'random') { 
+                if (state.sliderValue > 0) {
+                    generateRandomSelection(state.sliderValue); 
+                    await new Promise(r => setTimeout(r, 100)); 
+                }
+            }
+
             if (state.selected.length === 0 || state.balance < state.bet) { stopAutoPlay(); return; }
             document.getElementById('winOverlay').classList.remove('show');
             state.isPlaying = true; const currentBet = state.bet; state.balance -= currentBet; updateBalance();
@@ -381,7 +543,7 @@
         function renderHistoryPanel() { const p = document.getElementById('historyPanel'); if(state.history.length === 0) return; p.innerHTML = ''; state.history.forEach(r => { const row = document.createElement('div'); row.className = 'hist-row'; const c = r.net >= 0 ? 'net-pos' : 'net-neg'; const s = r.net >= 0 ? '+' : ''; row.innerHTML = `<div style="font-family:monospace; color:#888;">${r.time}</div><div style="text-align:center;">${r.hits}/${r.total}</div><div style="text-align:right;" class="${c}">${s}$${r.net.toFixed(2)}</div>`; p.appendChild(row); }); }
         function updateUI() {
             for (let i = 1; i <= TOTAL_NUMBERS; i++) { const b = document.getElementById(`ball-${i}`); b.className = 'ball'; if (state.selected.includes(i)) { b.classList.add('active-pick'); continue; } if (state.lastSelected.includes(i) && state.lastDrawn.includes(i)) { b.classList.add('hist-gold'); if(document.getElementById('statusMsg').innerText.includes("WON")) b.classList.add('pulsing'); continue; } if (state.lastSelected.includes(i) && !state.lastDrawn.includes(i)) { b.classList.add('hist-red'); continue; } if (state.lastDrawn.includes(i)) { b.classList.add('hist-drawn'); } }
-            const pc = document.getElementById('paytablePills'); pc.innerHTML = ''; const s = state.selected.length > 0 ? state.selected.length : state.sliderValue; const t = PAYTABLES[s]; let wh = -1; if(!state.isPlaying && state.history.length > 0 && state.history[0].total === s) wh = state.history[0].hits;
+            const pc = document.getElementById('paytablePills'); pc.innerHTML = ''; const s = state.selected.length > 0 ? state.selected.length : (state.pickMode === 'random' ? state.sliderValue : (state.lastSelected.length || 1)); const t = PAYTABLES[s]; let wh = -1; if(!state.isPlaying && state.history.length > 0 && state.history[0].total === s) wh = state.history[0].hits;
             if(t) { Object.keys(t).sort((a,b)=>a-b).forEach(h => { let m = t[h]; const p = document.createElement('div'); p.className = 'pay-pill'; if (parseInt(h) === wh) p.classList.add('active'); p.innerHTML = `<span class="pay-mult">${m}x</span><div class="pay-hit-circle">${h}</div>`; pc.appendChild(p); }); }
         }
         function updateBalance() { document.getElementById('balance').innerText = `$${state.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; }
