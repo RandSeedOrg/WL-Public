@@ -2,21 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Randseed Keno v10 - Random Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Randseed Keno v16 - Wide Balance</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --panel-color: #1e1e1e;
+            /* WARMER THEME */
+            --bg-color: #242220; 
+            --panel-color: #2f2d2b; 
             --accent-color: #ffd700;
             --col-blue: #3a86ff;
             --col-gold: #ffd700;
             --col-red:  #ff4444;
-            --col-dark: #444444;
+            --col-dark: #4a4846; 
             --col-profit: #39ff14;
             --col-loss:   #ff4444;
-            --text-white: #ffffff;
+            --text-white: #f0f0f0; 
+            --nav-height: 48px;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -27,670 +31,360 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            overflow-x: hidden;
             user-select: none;
+            cursor: pointer;
         }
 
-        /* --- HEADER --- */
-        .header-container {
-            width: 100%;
-            max-width: 800px;
-            position: relative;
-            margin-bottom: 20px;
-            z-index: 200;
+        /* --- TOP NAV BAR --- */
+        .nav-bar {
+            width: 100%; height: var(--nav-height);
+            background: #2f2d2b; border-bottom: 1px solid #3e3c3a;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px; position: sticky; top: 0; z-index: 500;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .nav-right { justify-content: flex-end; }
+        .nav-center { flex: 2; text-align: center; font-size: 1rem; font-weight: bold; color: #eee; }
+        .nav-icon {
+            background: transparent; border: none; color: #aaa; font-size: 1.2rem;
+            cursor: pointer; padding: 8px; display: flex; align-items: center;
+            justify-content: center;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: var(--panel-color);
-            border-radius: 12px;
-            border-bottom: 2px solid #333;
+        /* --- GAME HEADER (Balance) --- */
+        .game-header-container {
+            width: 100%; max-width: 600px; position: relative;
+            margin: 10px 0 5px 0; padding: 0 10px; z-index: 400;
+            display: flex; justify-content: flex-end; flex-shrink: 0;
         }
-
-        .brand-title { font-size: 1.2rem; font-weight: bold; color: #eee; }
-
-        .balance-wrapper {
-            display: flex; align-items: center; gap: 10px;
-            background: #2a2a2a; padding: 5px 15px;
-            border-radius: 8px; border: 1px solid #444;
+        
+        /* UPDATED: Wide Balance Trigger */
+        .balance-dropdown-trigger {
+            display: flex; align-items: center; justify-content: space-between; /* Spreads content */
+            gap: 8px;
+            background: var(--panel-color); padding: 8px 15px;
+            border-radius: 8px; border: 1px solid #3e3c3a; cursor: pointer;
+            width: 300px; /* MATCHES HISTORY PANEL WIDTH */
+            max-width: 100%; /* Safety for small screens */
         }
-
-        .balance-box { font-size: 1.4rem; font-weight: bold; color: var(--accent-color); }
-
-        .hist-toggle-btn {
-            background: transparent; border: none; color: #888;
-            cursor: pointer; font-size: 0.9rem; padding: 5px;
-        }
-        .hist-toggle-btn:hover { color: #fff; }
+        
+        .bal-label { font-size: 0.75rem; color: #888; font-weight: bold; }
+        .bal-amount { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); letter-spacing: 0.5px; }
+        .bal-arrow { font-size: 0.7rem; color: #888; transition: transform 0.3s; }
+        .bal-arrow.rotate { transform: rotate(180deg); }
 
         .history-panel {
-            position: absolute; top: 100%; right: 0; width: 320px;
-            background: #252525; border: 1px solid #444; border-radius: 0 0 8px 8px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
-            max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out;
+            position: absolute; top: 100%; right: 10px; width: 300px;
+            background: #2f2d2b; border: 1px solid #3e3c3a; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-height: 0; overflow: hidden; transition: all 0.2s ease-in-out;
+            opacity: 0; pointer-events: none;
         }
-        .history-panel.open { max-height: 400px; overflow-y: auto; }
-        
-        .hist-row {
-            display: grid; grid-template-columns: 2fr 1fr 1fr;
-            padding: 10px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #ccc;
-        }
+        .history-panel.open { max-height: 350px; opacity: 1; pointer-events: auto; margin-top: 5px; }
+        .hist-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px; border-bottom: 1px solid #3e3c3a; font-size: 0.85rem; color: #ccc; }
         .net-pos { color: var(--col-profit); font-weight: bold; }
         .net-neg { color: var(--col-loss); }
 
-        /* --- GAME CONTAINER --- */
-        .game-container {
-            display: flex; gap: 20px; max-width: 950px; width: 100%;
-            flex-wrap: wrap; justify-content: center; align-items: flex-start;
-            position: relative;
+        /* --- MAIN LAYOUT --- */
+        .game-layout {
+            display: flex; flex-direction: column;
+            width: 100%; max-width: 600px;
+            padding: 0 10px;
         }
 
+        /* GRID */
         .grid-container {
-            background: var(--panel-color); padding: 15px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); min-width: 300px; flex: 2;
+            background: var(--panel-color); padding: 8px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-bottom: 8px;
         }
-
         .keno-grid {
-            display: grid; grid-template-columns: repeat(10, minmax(34px, 1fr)); gap: 6px;
+            display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;
+        }
+        @media (max-width: 480px) {
+            .keno-grid { grid-template-columns: repeat(8, 1fr); gap: 4px; }
         }
 
-        /* --- BALLS --- */
         .ball {
-            aspect-ratio: 1; background: #252525; border: 2px solid #333; border-radius: 50%;
-            color: #666; font-weight: bold; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; font-size: 14px;
+            aspect-ratio: 1; background: #3a3836; border: 2px solid #4a4846; border-radius: 50%;
+            color: #888; font-weight: bold; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 13px;
             transition: transform 0.1s; position: relative;
         }
-        .ball:hover { transform: scale(1.1); z-index: 50; border-color:#555; }
-        .ball:active { transform: scale(0.9); }
-
-        /* VISUAL STATES PRIORITY */
-        
-        /* 1. Active Selection (Blue) - Shows what will play NEXT */
-        .ball.active-pick {
-            background: var(--col-blue) !important; color: white !important;
-            border-color: #88ccff !important; box-shadow: 0 0 10px rgba(58, 134, 255, 0.6) !important;
-            z-index: 100; transform: scale(1.05);
-        }
-
-        /* 2. History Hit (Gold) */
-        .ball.hist-gold {
-            background: var(--col-gold); color: black; border-color: #fff;
-            box-shadow: 0 0 10px var(--col-gold); font-weight: 900; z-index: 10;
-        }
-        
-        /* 3. History Miss (Red) */
-        .ball.hist-red {
-            background: #3a0000; border-color: var(--col-red); color: var(--col-red); opacity: 0.9;
-        }
-        
-        /* 4. History Drawn (Dark) */
-        .ball.hist-drawn {
-            background: var(--col-dark); color: white; border-color: #666;
-        }
-
+        .ball.active-pick { background: var(--col-blue) !important; color: white !important; border-color: #88ccff !important; box-shadow: 0 0 8px rgba(58, 134, 255, 0.6) !important; z-index: 100; }
+        .ball.hist-gold { background: var(--col-gold); color: black; border-color: #fff; box-shadow: 0 0 8px var(--col-gold); font-weight: 900; z-index: 10; }
+        .ball.hist-red { background: #3a0000; border-color: var(--col-red); color: var(--col-red); opacity: 0.9; }
+        .ball.hist-drawn { background: var(--col-dark); color: white; border-color: #666; }
         .ball.hist-gold.pulsing { animation: winPulse 1.5s infinite; }
-        @keyframes winPulse {
-            0% { box-shadow: 0 0 5px var(--col-gold); }
-            50% { box-shadow: 0 0 20px var(--col-gold); }
-            100% { box-shadow: 0 0 5px var(--col-gold); }
-        }
+        @keyframes winPulse { 0% { box-shadow: 0 0 5px var(--col-gold); } 50% { box-shadow: 0 0 15px var(--col-gold); } 100% { box-shadow: 0 0 5px var(--col-gold); } }
 
-        /* --- INFO PANEL --- */
-        .info-panel {
-            flex: 1; min-width: 280px; background: var(--panel-color);
-            padding: 20px; border-radius: 12px; border: 1px solid #333;
+        /* PAYTABLE */
+        .paytable-wrapper {
+            background: var(--panel-color); padding: 8px; border-radius: 12px;
+            border: 1px solid #3e3c3a; margin-bottom: 8px;
+            display: flex; flex-direction: column; justify-content: center;
+            min-height: 50px;
         }
-        .paytable { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .paytable td { padding: 8px; border-bottom: 1px solid #333; }
-        .paytable tr.active-payout { background: rgba(255, 215, 0, 0.15); color: var(--accent-color); font-weight: bold; }
-
-        .win-overlay {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            background: rgba(0,0,0,0.95); border: 2px solid var(--accent-color);
-            padding: 40px; border-radius: 20px; text-align: center; z-index: 999;
-            pointer-events: none; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .status-text { text-align: center; color: #888; font-size: 0.8rem; margin-bottom: 4px; }
+        .pay-pills-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+        .pay-pill {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: transparent; padding: 2px 5px; border-radius: 6px; min-width: 40px;
         }
-        .win-overlay.show { transform: translate(-50%, -50%) scale(1); }
+        .pay-mult { font-size: 0.75rem; font-weight: bold; color: #fff; margin-bottom: 2px; }
+        .pay-hit-circle {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #3a3836; color: #888; font-size: 0.7rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid #4a4846; transition: all 0.2s;
+        }
+        .pay-pill.active .pay-hit-circle { background: var(--col-profit); color: #000; border-color: #fff; box-shadow: 0 0 6px var(--col-profit); transform: scale(1.1); }
+        .pay-pill.active .pay-mult { color: var(--col-profit); }
 
-        /* --- CONTROLS --- */
+        /* CONTROLS */
         .controls-wrapper {
-            width: 100%; max-width: 800px; margin-top: 20px;
-            display: flex; flex-direction: column; gap: 15px;
+            display: flex; flex-direction: column; gap: 8px;
+            margin-top: 10px; 
+            padding-bottom: 60px;
         }
 
         .slider-row {
             display: flex; align-items: center; justify-content: space-between;
-            background: #252525; padding: 15px 25px; border-radius: 12px; border: 1px solid #333;
+            background: #2f2d2b; padding: 5px 15px; border-radius: 10px; border: 1px solid #3e3c3a;
+            height: 44px;
         }
-        .slider-label { font-size: 0.9rem; color: #aaa; font-weight: bold; text-transform:uppercase; letter-spacing:1px; }
-        
-        /* SLIDER STYLING */
-        input[type=range] {
-            -webkit-appearance: none; width: 50%; background: transparent;
-        }
+        .slider-label { font-size: 0.7rem; color: #888; font-weight: bold; text-transform:uppercase; letter-spacing:0.5px; margin-right: 10px; }
+        input[type=range] { -webkit-appearance: none; flex: 1; background: transparent; height: 100%; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
-            background: var(--col-blue); cursor: pointer; margin-top: -10px;
-            box-shadow: 0 0 10px rgba(58, 134, 255, 0.8); border: 2px solid white;
+            -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%;
+            background: var(--col-blue); cursor: pointer; margin-top: -9px;
+            box-shadow: 0 0 5px rgba(58, 134, 255, 0.8); border: 2px solid white;
         }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 6px; cursor: pointer; background: #444; border-radius: 3px;
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #444; border-radius: 2px; }
+        .slider-val-box {
+            background:#3a3836; width:26px; height:26px; border-radius:6px; 
+            display:flex; align-items:center; justify-content:center; 
+            border:1px solid #4a4846; margin-left: 10px;
         }
 
         .buttons-row {
-            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+            display: flex; gap: 6px; 
+            align-items: stretch;
+            height: 52px; 
         }
-
-        button { padding: 12px 20px; border-radius: 8px; border:none; font-weight:bold; cursor:pointer; }
-        button:active { transform: scale(0.96); }
         
-        .btn-play { 
-            background: linear-gradient(135deg, #39ff14, #008f09); color: white; 
-            min-width: 140px; font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            box-shadow: 0 4px 15px rgba(57, 255, 20, 0.3);
+        button { border-radius: 10px; border:none; font-weight:bold; cursor:pointer; font-size: 0.95rem; position: relative; overflow: hidden; }
+        button:active { transform: scale(0.96); filter: brightness(0.9); }
+
+        .btn-bet-grp {
+            display: flex; gap: 2px; background: #3a3836; border-radius: 10px; padding: 2px;
+            flex-shrink: 0;
         }
-        .btn-play:disabled { background: #444; cursor: not-allowed; color: #888; box-shadow:none; }
+        .btn-bet-act { background: #4a4846; color: white; width: 35px; border-radius: 8px; font-size: 1.1rem;}
+        .btn-bet-val { background: transparent; color: #ddd; width: 60px; font-size: 0.8rem; cursor: default; }
+
+        .btn-clear { background: #3a3836; color: white; width: 45px; flex-shrink: 0; font-size: 1.2rem; }
         
         .btn-auto {
-            background: #333; color: white; border: 1px solid #555; min-width: 100px;
+            background: #3a3836; color: white; border: 1px solid #4a4846;
+            flex: 1.2; font-size: 0.9rem; line-height: 1.1; 
         }
-        .btn-auto.active {
-            background: var(--col-blue); border-color: #88ccff; box-shadow: 0 0 10px rgba(58,134,255,0.4);
-        }
-        
-        .btn-clear { background: #333; color: white; }
+        .btn-auto.active { background: var(--col-blue); border-color: #88ccff; color: white; }
 
-        .history-panel::-webkit-scrollbar { width: 6px; }
-        .history-panel::-webkit-scrollbar-track { background: #222; }
-        .history-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        .btn-play { 
+            background: linear-gradient(135deg, #39ff14, #008f09); color: white; 
+            flex: 1.8; font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(57, 255, 20, 0.2); letter-spacing: 1px;
+        }
+        .btn-play:disabled { background: #444; cursor: not-allowed; color: #888; box-shadow:none; }
+
+        /* Win Overlay */
+        .win-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(40, 38, 36, 0.98); border: 2px solid var(--accent-color);
+            padding: 30px; border-radius: 20px; text-align: center; z-index: 999;
+            pointer-events: none; transition: transform 0.2s ease-out; width: 80%; max-width: 300px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .win-overlay.show { transform: translate(-50%, -50%) scale(1); }
 
     </style>
 </head>
 <body>
 
     <script>
-        // Audio Synthesizer
         const AudioSys = {
-            ctx: null,
-            init: function() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-            },
-            playTone: function(freq, type, duration, vol = 0.1) {
-                if (!this.ctx) this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            },
-            click: function() { this.playTone(800, 'sine', 0.1, 0.05); },
-            toggle: function() { this.playTone(600, 'triangle', 0.1, 0.05); },
-            pop: function() { 
-                if (!this.ctx) this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.1);
-            },
-            win: function() {
-                setTimeout(() => this.playTone(523.25, 'sine', 0.4, 0.1), 0);
-                setTimeout(() => this.playTone(659.25, 'sine', 0.4, 0.1), 100);
-                setTimeout(() => this.playTone(783.99, 'sine', 0.8, 0.1), 200);
-            },
-            slide: function() { this.playTone(400, 'sine', 0.05, 0.02); }
+            ctx: null, muted: false,
+            init: function() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); },
+            toggleMute: function() { this.muted = !this.muted; return this.muted; },
+            playTone: function(f, t, d, v=0.1) { if(this.muted) return; if(!this.ctx) this.init(); const o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); },
+            click: function() { this.playTone(800,'sine',0.1,0.05); },
+            toggle: function() { this.playTone(600,'triangle',0.1,0.05); },
+            pop: function() { if(this.muted)return; if(!this.ctx)this.init(); const o=this.ctx.createOscillator(),g=this.ctx.createGain(); o.frequency.setValueAtTime(200,this.ctx.currentTime); o.frequency.exponentialRampToValueAtTime(600,this.ctx.currentTime+0.1); g.gain.setValueAtTime(0.1,this.ctx.currentTime); g.gain.linearRampToValueAtTime(0,this.ctx.currentTime+0.1); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+0.1); },
+            win: function() { if(this.muted)return; setTimeout(()=>this.playTone(523.25,'sine',0.4,0.1),0); setTimeout(()=>this.playTone(659.25,'sine',0.4,0.1),100); setTimeout(()=>this.playTone(783.99,'sine',0.8,0.1),200); },
+            slide: function() { this.playTone(400,'sine',0.05,0.02); }
         };
     </script>
 
-    <div class="header-container">
-        <div class="header">
-            <div class="brand-title">Randseed Keno v10</div>
-            <div class="balance-wrapper">
-                <span style="color:#666; font-size:0.8rem; margin-right:5px;">BAL</span>
-                <div class="balance-box">$<span id="balance">100.00</span></div>
-                <button class="hist-toggle-btn" onclick="toggleHistory()" title="Show History">▼</button>
-            </div>
+    <!-- TOP NAV -->
+    <div class="nav-bar">
+        <div class="nav-left">
+            <button class="nav-icon" onclick="exitGame()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
         </div>
-        
-        <div id="historyPanel" class="history-panel">
-            <div style="padding:15px; text-align:center; color:#555; font-size:0.8rem;">No history yet</div>
+        <div class="nav-center">Randseed Keno</div>
+        <div class="nav-right">
+            <button class="nav-icon" id="btnSound" onclick="toggleMute()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+            <button class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></button>
         </div>
     </div>
 
-    <div class="game-container">
-        <div id="winOverlay" class="win-overlay">
-            <h2 style="color:white; margin:0; text-transform:uppercase; letter-spacing:2px;">You Won</h2>
-            <div id="winAmountDisplay" style="font-size:3rem; color:var(--accent-color); font-weight:900; margin:10px 0;">$0.00</div>
-            <div style="font-size:0.8rem; color:#888; margin-top:10px;">Click anywhere to continue</div>
+    <!-- BALANCE DROPDOWN -->
+    <div class="game-header-container">
+        <div class="balance-dropdown-trigger" id="balanceTrigger" onclick="toggleHistory(event)">
+            <span class="bal-label">BAL</span>
+            <span class="bal-amount" id="balance">$1,000.00</span>
+            <span class="bal-arrow" id="balArrow">▼</span>
         </div>
+        <div id="historyPanel" class="history-panel"><div style="padding:15px; text-align:center; color:#555; font-size:0.8rem;">No history yet</div></div>
+    </div>
 
+    <!-- MAIN GAME AREA -->
+    <div class="game-layout">
+        
+        <!-- GRID -->
         <div class="grid-container">
             <div class="keno-grid" id="grid"></div>
         </div>
 
-        <div class="info-panel">
-            <div id="statusMsg" style="text-align:center; color:#888; margin-bottom:15px;">Pick 1-10 Numbers</div>
-            <table class="paytable">
-                <thead>
-                    <tr style="color:#666; font-size:0.8rem;">
-                        <th align="left">Hits</th>
-                        <th align="center">Mult</th>
-                        <th align="right">Pays</th>
-                    </tr>
-                </thead>
-                <tbody id="paytableBody"></tbody>
-            </table>
+        <!-- PRIZE BOX -->
+        <div class="paytable-wrapper">
+            <div id="statusMsg" class="status-text">Pick 1-10 Numbers</div>
+            <div class="pay-pills-container" id="paytablePills"></div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls-wrapper">
+            <!-- Slider -->
+            <div class="slider-row">
+                <span class="slider-label">Random</span>
+                <input type="range" id="pickSlider" min="1" max="10" value="4" oninput="onSliderInput(this.value)" onchange="onSliderChange(this.value)">
+                <div class="slider-val-box"><span id="pickVal" style="color:var(--col-blue); font-weight:bold; font-size:1rem;">4</span></div>
+            </div>
+
+            <!-- Single Row Buttons -->
+            <div class="buttons-row">
+                <!-- Bet Group -->
+                <div class="btn-bet-grp">
+                    <button class="btn-bet-act" onclick="changeBet(-1)">-</button>
+                    <button class="btn-bet-val" id="betDisplay">$1.00</button>
+                    <button class="btn-bet-act" onclick="changeBet(1)">+</button>
+                </div>
+                
+                <!-- Clear -->
+                <button class="btn-clear" onclick="clearSelection()">🗑️</button>
+                
+                <!-- Auto -->
+                <button class="btn-auto" id="btnAuto" onclick="toggleAutoPlay()">Auto</button>
+                
+                <!-- PLAY (Big) -->
+                <button class="btn-play" id="playBtn" onclick="manualPlay()">PLAY</button>
+            </div>
         </div>
     </div>
 
-    <div class="controls-wrapper">
-        <!-- SLIDER ROW (Acts as Quick Pick) -->
-        <div class="slider-row">
-            <div style="display:flex; flex-direction:column;">
-                <span class="slider-label">Random Pick Amount</span>
-                <span style="color:#666; font-size:0.75rem;">Drag to generate</span>
-            </div>
-            
-            <input type="range" id="pickSlider" min="1" max="10" value="4" 
-                   oninput="onSliderInput(this.value)" 
-                   onchange="onSliderChange(this.value)">
-            
-            <div style="background:#333; width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid #555;">
-                <span id="pickVal" style="color:var(--col-blue); font-weight:bold; font-size:1.2rem;">4</span>
-            </div>
-        </div>
-
-        <!-- BUTTONS -->
-        <div class="buttons-row">
-            <button class="btn-clear" onclick="changeBet(-1)">-</button>
-            <button class="btn-clear" id="betDisplay" style="cursor:default; min-width:80px;">Bet: $1.00</button>
-            <button class="btn-clear" onclick="changeBet(1)">+</button>
-            
-            <div style="width:20px"></div>
-            
-            <button class="btn-clear" onclick="clearSelection()">Clear Selection</button>
-            
-            <div style="width:20px"></div>
-
-            <button class="btn-auto" id="btnAuto" onclick="toggleAutoPlay()">Auto Play</button>
-            <button class="btn-play" id="playBtn" onclick="manualPlay()">PLAY</button>
-        </div>
+    <!-- OVERLAY -->
+    <div id="winOverlay" class="win-overlay">
+        <h2 style="color:white; margin:0; text-transform:uppercase; letter-spacing:2px; font-size: 1.5rem;">You Won</h2>
+        <div id="winAmountDisplay" style="font-size:2.5rem; color:var(--accent-color); font-weight:900; margin:10px 0;">$0.00</div>
+        <div style="font-size:0.8rem; color:#888; margin-top:5px;">Tap anywhere to close</div>
     </div>
 
     <script>
-        // CONFIG
-        const TOTAL_NUMBERS = 40;
-        const DRAW_SIZE = 10; 
+        document.addEventListener('click', function(e) {
+            const overlay = document.getElementById('winOverlay');
+            if (overlay.classList.contains('show')) overlay.classList.remove('show');
+            const histPanel = document.getElementById('historyPanel');
+            const balTrigger = document.getElementById('balanceTrigger');
+            if (histPanel.classList.contains('open') && !balTrigger.contains(e.target)) {
+                histPanel.classList.remove('open');
+                document.getElementById('balArrow').classList.remove('rotate');
+            }
+        });
+        document.body.addEventListener('click', () => AudioSys.init(), { once: true });
 
-        const PAYTABLES = {
-            1: { 1: 1.8 },
-            2: { 2: 9.0 }, 
-            3: { 3: 24, 2: 2 },
-            4: { 4: 120, 3: 5, 2: 1.5 },
-            5: { 5: 450, 4: 12, 3: 1.8 },
-            6: { 6: 1600, 5: 35, 4: 3, 3: 1 },
-            7: { 7: 5000, 6: 100, 5: 10, 4: 2, 3: 1 },
-            8: { 8: 2000, 7: 200, 6: 50, 5: 10, 4: 3, 0: 25 },
-            9: { 9: 3000, 8: 300, 7: 40, 6: 10, 5: 3, 0: 2 },
-            10: { 10: 5000, 9: 2000, 8: 400, 7: 70, 6: 15, 5: 2, 0: 1 }
-        };
+        function exitGame() { alert("Returning to Main Page..."); }
+        function toggleMute() {
+            const isMuted = AudioSys.toggleMute();
+            const btn = document.getElementById('btnSound');
+            btn.innerHTML = isMuted ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+            btn.style.opacity = isMuted ? "0.5" : "1";
+        }
 
-        let state = { 
-            balance: 100.00, 
-            bet: 1.00, 
-            selected: [],         
-            lastSelected: [],     
-            lastDrawn: [],        
-            isPlaying: false,
-            isAutoPlaying: false,
-            pickMode: 'random', // 'manual' or 'random'
-            sliderValue: 4,
-            history: [] 
-        };
+        const TOTAL_NUMBERS = 40, DRAW_SIZE = 10;
+        const PAYTABLES = { 1:{1:1.8}, 2:{2:9.0}, 3:{3:24,2:2}, 4:{4:120,3:5,2:1.5}, 5:{5:450,4:12,3:1.8}, 6:{6:1600,5:35,4:3,3:1}, 7:{7:5000,6:100,5:10,4:2,3:1}, 8:{8:2000,7:200,6:50,5:10,4:3,0:25}, 9:{9:3000,8:300,7:40,6:10,5:3,0:2}, 10:{10:5000,9:2000,8:400,7:70,6:15,5:2,0:1} };
+        let state = { balance: 1000.00, bet: 1.00, selected: [], lastSelected: [], lastDrawn: [], isPlaying: false, isAutoPlaying: false, pickMode: 'random', sliderValue: 4, history: [] };
 
-        window.onload = function() {
-            initGrid();
-            // Start with a default random pick
-            generateRandomSelection(4);
-            // Init audio context on first click anywhere
-            document.body.addEventListener('click', () => AudioSys.init(), { once: true });
-        };
+        window.onload = function() { initGrid(); generateRandomSelection(4); updateBalance(); };
 
         function initGrid() {
-            const gridEl = document.getElementById('grid');
-            gridEl.innerHTML = ''; 
+            const gridEl = document.getElementById('grid'); gridEl.innerHTML = ''; 
             for (let i = 1; i <= TOTAL_NUMBERS; i++) {
-                let btn = document.createElement('div');
-                btn.className = 'ball';
-                btn.innerText = i;
-                btn.id = `ball-${i}`;
-                btn.onclick = () => toggleNumber(i);
+                let btn = document.createElement('div'); btn.className = 'ball'; btn.innerText = i; btn.id = `ball-${i}`;
+                btn.onclick = (e) => { e.stopPropagation(); toggleNumber(i); };
                 gridEl.appendChild(btn);
             }
         }
-
-        // --- SLIDER LOGIC ---
-        function onSliderInput(val) {
-            document.getElementById('pickVal').innerText = val;
-            AudioSys.slide();
-        }
-
-        function onSliderChange(val) {
-            AudioSys.click();
-            hideOverlay();
-            if(state.isAutoPlaying) stopAutoPlay();
-            
-            state.sliderValue = parseInt(val);
-            state.pickMode = 'random'; // User touched slider, implies Random Mode
-            generateRandomSelection(state.sliderValue);
-        }
-
-        function generateRandomSelection(qty) {
-            // Visual generation only (Blue balls)
-            state.selected = [];
-            while(state.selected.length < qty) {
-                let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1;
-                if(!state.selected.includes(r)) state.selected.push(r);
-            }
-            updateUI();
-        }
-
-        // --- HISTORY ---
-        function toggleHistory() {
-            AudioSys.click();
-            const panel = document.getElementById('historyPanel');
-            panel.classList.toggle('open');
-            document.querySelector('.hist-toggle-btn').innerText = panel.classList.contains('open') ? '▲' : '▼';
-        }
-
-        function formatGameTime() {
-            const now = new Date();
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${String(now.getFullYear()).slice(-2)}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-        }
-
-        function addHistoryRecord(hits, totalSpots, winAmount, betAmount) {
-            state.history.unshift({
-                time: formatGameTime(),
-                hits: hits,
-                total: totalSpots,
-                net: winAmount - betAmount
-            }); 
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const panel = document.getElementById('historyPanel');
-            if(state.history.length === 0) return;
-            panel.innerHTML = '';
-            state.history.forEach(rec => {
-                const row = document.createElement('div');
-                row.className = 'hist-row';
-                const netClass = rec.net >= 0 ? 'net-pos' : 'net-neg';
-                const netSign = rec.net >= 0 ? '+' : '';
-                row.innerHTML = `<div style="font-family:monospace; color:#888;">${rec.time}</div><div style="text-align:center;">${rec.hits}/${rec.total}</div><div style="text-align:right;" class="${netClass}">${netSign}$${rec.net.toFixed(2)}</div>`;
-                panel.appendChild(row);
-            });
-        }
-
-        // --- INTERACTION ---
-        function hideOverlay() {
-            document.getElementById('winOverlay').classList.remove('show');
-        }
-
-        function toggleNumber(num) {
-            if (state.isPlaying) return;
-            AudioSys.click();
-            hideOverlay();
-            if(state.isAutoPlaying) stopAutoPlay();
-
-            // Switching to manual mode means we STOP regenerating random numbers
-            state.pickMode = 'manual';
-
-            const idx = state.selected.indexOf(num);
-            if (idx > -1) state.selected.splice(idx, 1);
-            else if (state.selected.length < 10) state.selected.push(num);
-            updateUI();
-        }
-
-        function clearSelection() {
-            if (state.isPlaying) return;
-            AudioSys.click();
-            hideOverlay();
-            if(state.isAutoPlaying) stopAutoPlay();
-            state.selected = [];
-            state.pickMode = 'manual'; // Cleared, so effectively manual
-            updateUI();
-        }
-
-        function changeBet(dir) {
-            if (state.isPlaying) return;
-            AudioSys.click();
-            hideOverlay();
-            const amounts = [1, 2, 5, 10, 20];
-            let idx = amounts.indexOf(state.bet);
-            if (dir === 1 && idx < amounts.length - 1) state.bet = amounts[idx + 1];
-            if (dir === -1 && idx > 0) state.bet = amounts[idx - 1];
-            document.getElementById('betDisplay').innerText = `Bet: $${state.bet}.00`;
-            updateUI();
-        }
-
-        // --- GAMEPLAY ---
-        function toggleAutoPlay() {
-            AudioSys.toggle();
-            if(state.isAutoPlaying) stopAutoPlay();
-            else startAutoPlay();
-        }
-
-        function startAutoPlay() {
-            if (state.balance < state.bet) return;
-            if (state.selected.length === 0) generateRandomSelection(state.sliderValue); // Safety
-
-            state.isAutoPlaying = true;
-            document.getElementById('btnAuto').innerText = "Stop";
-            document.getElementById('btnAuto').classList.add('active');
-            playGame();
-        }
-
-        function stopAutoPlay() {
-            state.isAutoPlaying = false;
-            document.getElementById('btnAuto').innerText = "Auto Play";
-            document.getElementById('btnAuto').classList.remove('active');
-        }
-
-        function manualPlay() {
-            AudioSys.click();
-            if(state.isAutoPlaying) stopAutoPlay();
-            playGame();
-        }
+        function onSliderInput(val) { document.getElementById('pickVal').innerText = val; AudioSys.slide(); }
+        function onSliderChange(val) { AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); state.sliderValue = parseInt(val); state.pickMode = 'random'; generateRandomSelection(state.sliderValue); }
+        function generateRandomSelection(qty) { state.selected = []; while(state.selected.length < qty) { let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1; if(!state.selected.includes(r)) state.selected.push(r); } updateUI(); }
+        function toggleHistory(e) { if(e) e.stopPropagation(); AudioSys.click(); document.getElementById('historyPanel').classList.toggle('open'); document.getElementById('balArrow').classList.toggle('rotate'); }
+        function toggleNumber(num) { if (state.isPlaying) return; AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); state.pickMode = 'manual'; const idx = state.selected.indexOf(num); if (idx > -1) state.selected.splice(idx, 1); else if (state.selected.length < 10) state.selected.push(num); updateUI(); }
+        function clearSelection() { if (state.isPlaying) return; AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); state.selected = []; state.pickMode = 'manual'; updateUI(); }
+        function changeBet(dir) { if (state.isPlaying) return; AudioSys.click(); const a = [1, 2, 5, 10, 20]; let i = a.indexOf(state.bet); if (dir === 1 && i < a.length - 1) state.bet = a[i + 1]; if (dir === -1 && i > 0) state.bet = a[i - 1]; document.getElementById('betDisplay').innerText = `$${state.bet.toFixed(2)}`; updateUI(); }
+        function toggleAutoPlay() { AudioSys.toggle(); if(state.isAutoPlaying) stopAutoPlay(); else startAutoPlay(); }
+        function startAutoPlay() { if (state.balance < state.bet) return; if (state.selected.length === 0) generateRandomSelection(state.sliderValue); state.isAutoPlaying = true; document.getElementById('btnAuto').innerText = "Stop"; document.getElementById('btnAuto').classList.add('active'); playGame(); }
+        function stopAutoPlay() { state.isAutoPlaying = false; document.getElementById('btnAuto').innerText = "Auto"; document.getElementById('btnAuto').classList.remove('active'); }
+        function manualPlay() { AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); playGame(); }
 
         async function playGame() {
-            // 1. REGENERATE IF IN RANDOM MODE
-            // The user requested: "change pick number randomly... not the same number each time"
-            if (state.pickMode === 'random') {
-                generateRandomSelection(state.sliderValue);
-                // Allow UI to update briefly so user sees the new blue numbers before draw starts
-                await new Promise(r => setTimeout(r, 200)); 
-            }
-
-            if (state.selected.length === 0 || state.balance < state.bet) {
-                stopAutoPlay();
-                return;
-            }
-            hideOverlay();
-            
-            state.isPlaying = true;
-            const currentBet = state.bet;
-            state.balance -= currentBet;
-            updateBalance();
-            
-            // CLEAR OLD HISTORY VISUALS
-            state.lastSelected = []; 
-            state.lastDrawn = [];
-            updateUI(); 
-
-            document.getElementById('playBtn').disabled = true;
-            document.getElementById('statusMsg').innerText = state.isAutoPlaying ? "Auto Running..." : "Drawing...";
-
-            // DRAW
-            const drawn = [];
-            while(drawn.length < DRAW_SIZE) {
-                let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1;
-                if(!drawn.includes(r)) drawn.push(r);
-            }
-
-            // ANIMATE (Slower as requested)
+            if (state.pickMode === 'random') { generateRandomSelection(state.sliderValue); await new Promise(r => setTimeout(r, 100)); }
+            if (state.selected.length === 0 || state.balance < state.bet) { stopAutoPlay(); return; }
+            document.getElementById('winOverlay').classList.remove('show');
+            state.isPlaying = true; const currentBet = state.bet; state.balance -= currentBet; updateBalance();
+            state.lastSelected = []; state.lastDrawn = []; updateUI();
+            document.getElementById('playBtn').disabled = true; document.getElementById('statusMsg').innerText = "Drawing...";
+            const drawn = []; while(drawn.length < DRAW_SIZE) { let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1; if(!drawn.includes(r)) drawn.push(r); }
             let hits = 0;
-            const speed = 60; // Standard speed for both Manual and Auto to see results
-
             for (let i = 0; i < DRAW_SIZE; i++) {
-                await new Promise(r => setTimeout(r, speed));
-                const num = drawn[i];
-                AudioSys.pop();
-                
-                // Temporary visual application for animation
+                await new Promise(r => setTimeout(r, 50)); const num = drawn[i]; AudioSys.pop();
                 const ball = document.getElementById(`ball-${num}`);
-                if (state.selected.includes(num)) {
-                    ball.classList.add('hist-gold'); 
-                    hits++;
-                } else {
-                    ball.classList.add('hist-drawn');
-                }
+                if (state.selected.includes(num)) { ball.classList.add('hist-gold'); hits++; } else { ball.classList.add('hist-drawn'); }
             }
-
-            // CALC RESULTS
-            const spots = state.selected.length;
-            const paytable = PAYTABLES[spots];
-            const multiplier = paytable[hits] || 0;
-            const winAmount = currentBet * multiplier;
-
-            addHistoryRecord(hits, spots, winAmount, currentBet);
-
+            const spots = state.selected.length; const paytable = PAYTABLES[spots]; const multiplier = paytable[hits] || 0; const winAmount = currentBet * multiplier;
+            const now = new Date(); const ts = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+            state.history.unshift({ time: ts, hits: hits, total: spots, net: winAmount - currentBet }); renderHistoryPanel();
             if (winAmount > 0) {
-                state.balance += winAmount;
-                AudioSys.win();
-                showWin(winAmount); // Always show win overlay now, even in Auto
+                state.balance += winAmount; AudioSys.win(); showWin(winAmount);
                 document.getElementById('statusMsg').innerText = `WON $${winAmount.toFixed(2)}!`;
-                
-                drawn.forEach(d => {
-                    if(state.selected.includes(d)) document.getElementById(`ball-${d}`).classList.add('pulsing');
-                });
-            } else {
-                document.getElementById('statusMsg').innerText = "No match";
-            }
-
-            // STATE TRANSITION (Crucial Logic Change)
-            // 1. Save current to history
-            state.lastSelected = [...state.selected];
-            state.lastDrawn = [...drawn];
-            
-            // 2. Clear Active Selection (Blue)
-            // This satisfies: "Blue state will disappear because you haven't picked them for the new round yet"
-            state.selected = []; 
-
-            state.isPlaying = false;
-            document.getElementById('playBtn').disabled = false;
-            updateBalance();
-            updateUI(); // This renders the History (Red/Gold) and removes Blue
-
-            // AUTO PLAY LOOP
-            if (state.isAutoPlaying) {
-                if (state.balance >= state.bet) {
-                    // Slower delay (2.5s) to allow reading the Win Popup
-                    setTimeout(() => {
-                        if(state.isAutoPlaying) playGame();
-                    }, 2500); 
-                } else {
-                    stopAutoPlay();
-                }
-            }
+                drawn.forEach(d => { if(state.selected.includes(d)) document.getElementById(`ball-${d}`).classList.add('pulsing'); });
+            } else { document.getElementById('statusMsg').innerText = "No match"; }
+            state.lastSelected = [...state.selected]; state.lastDrawn = [...drawn]; state.selected = [];
+            state.isPlaying = false; document.getElementById('playBtn').disabled = false; updateBalance(); updateUI();
+            if (state.isAutoPlaying) { if (state.balance >= state.bet) { setTimeout(() => { if(state.isAutoPlaying) playGame(); }, 2000); } else { stopAutoPlay(); } }
         }
 
-        function showWin(amount) {
-            const overlay = document.getElementById('winOverlay');
-            document.getElementById('winAmountDisplay').innerText = `$${amount.toFixed(2)}`;
-            overlay.classList.add('show');
-        }
-
+        function showWin(amount) { document.getElementById('winAmountDisplay').innerText = `$${amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; document.getElementById('winOverlay').classList.add('show'); }
+        function renderHistoryPanel() { const p = document.getElementById('historyPanel'); if(state.history.length === 0) return; p.innerHTML = ''; state.history.forEach(r => { const row = document.createElement('div'); row.className = 'hist-row'; const c = r.net >= 0 ? 'net-pos' : 'net-neg'; const s = r.net >= 0 ? '+' : ''; row.innerHTML = `<div style="font-family:monospace; color:#888;">${r.time}</div><div style="text-align:center;">${r.hits}/${r.total}</div><div style="text-align:right;" class="${c}">${s}$${r.net.toFixed(2)}</div>`; p.appendChild(row); }); }
         function updateUI() {
-            for (let i = 1; i <= TOTAL_NUMBERS; i++) {
-                const ball = document.getElementById(`ball-${i}`);
-                ball.className = 'ball'; 
-
-                // Priority 1: Active Pick (Blue) - Shows NEXT round bets
-                if (state.selected.includes(i)) {
-                    ball.classList.add('active-pick');
-                    continue; 
-                }
-                // Priority 2: History Hit (Gold)
-                if (state.lastSelected.includes(i) && state.lastDrawn.includes(i)) {
-                    ball.classList.add('hist-gold');
-                    if(document.getElementById('statusMsg').innerText.includes("WON")) {
-                        ball.classList.add('pulsing');
-                    }
-                    continue;
-                }
-                // Priority 3: History Miss (Red)
-                if (state.lastSelected.includes(i) && !state.lastDrawn.includes(i)) {
-                    ball.classList.add('hist-red');
-                    continue;
-                }
-                // Priority 4: History Drawn (Dark)
-                if (state.lastDrawn.includes(i)) {
-                    ball.classList.add('hist-drawn');
-                }
-            }
-            
-            // Paytable Updates
-            const tbody = document.getElementById('paytableBody');
-            tbody.innerHTML = '';
-            
-            // If we have an active selection, show that paytable. 
-            // If not, show paytable for the slider value (what we WILL play next)
-            const spots = state.selected.length > 0 ? state.selected.length : state.sliderValue;
-            
-            const table = PAYTABLES[spots];
-            if(table) {
-                Object.keys(table).sort((a,b)=>b-a).forEach(hits => {
-                    let multi = table[hits];
-                    let row = document.createElement('tr');
-                    row.id = `pay-row-${hits}`;
-                    row.innerHTML = `<td>Match <strong>${hits}</strong></td><td align="center">${multi}x</td><td align="right">$${(multi*state.bet).toFixed(2)}</td>`;
-                    tbody.appendChild(row);
-                });
-            }
-            
-            // Highlight paytable row if game just finished
-            if (!state.isPlaying && state.history.length > 0) {
-                 // Only if the spots match (e.g. didn't change slider immediately)
-                 const lastRec = state.history[0];
-                 if (lastRec.total === spots) {
-                     const row = document.getElementById(`pay-row-${lastRec.hits}`);
-                     if(row) row.classList.add('active-payout');
-                 }
-            }
+            for (let i = 1; i <= TOTAL_NUMBERS; i++) { const b = document.getElementById(`ball-${i}`); b.className = 'ball'; if (state.selected.includes(i)) { b.classList.add('active-pick'); continue; } if (state.lastSelected.includes(i) && state.lastDrawn.includes(i)) { b.classList.add('hist-gold'); if(document.getElementById('statusMsg').innerText.includes("WON")) b.classList.add('pulsing'); continue; } if (state.lastSelected.includes(i) && !state.lastDrawn.includes(i)) { b.classList.add('hist-red'); continue; } if (state.lastDrawn.includes(i)) { b.classList.add('hist-drawn'); } }
+            const pc = document.getElementById('paytablePills'); pc.innerHTML = ''; const s = state.selected.length > 0 ? state.selected.length : state.sliderValue; const t = PAYTABLES[s]; let wh = -1; if(!state.isPlaying && state.history.length > 0 && state.history[0].total === s) wh = state.history[0].hits;
+            if(t) { Object.keys(t).sort((a,b)=>a-b).forEach(h => { let m = t[h]; const p = document.createElement('div'); p.className = 'pay-pill'; if (parseInt(h) === wh) p.classList.add('active'); p.innerHTML = `<span class="pay-mult">${m}x</span><div class="pay-hit-circle">${h}</div>`; pc.appendChild(p); }); }
         }
-
-        function updateBalance() {
-            document.getElementById('balance').innerText = state.balance.toFixed(2);
-        }
+        function updateBalance() { document.getElementById('balance').innerText = `$${state.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; }
     </script>
 </body>
 </html>
