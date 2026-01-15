@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Randseed Keno v2.25 - Local Debug & UI Polish</title>
+    <title>Randseed Keno v2.3 - UI Polish</title>
     <style>
         :root {
             /* WARMER THEME - MATCHING ORIGINAL */
@@ -66,52 +66,89 @@
             justify-content: center;
         }
 
-        /* --- GAME HEADER (Balance) --- */
+        /* --- GAME HEADER (Balance) - UPDATED STYLE --- */
         .game-header-container {
             width: 100%; max-width: 600px; position: relative;
-            margin: 10px 0 5px 0; padding: 0 10px; z-index: 400;
-            display: flex; justify-content: center; /* Centered to match grid width visually */
+            margin: 15px 0 10px 0; padding: 0 10px; z-index: 400;
+            display: flex; justify-content: center;
             flex-shrink: 0;
         }
         
         .balance-dropdown-trigger {
             display: flex; align-items: center; justify-content: space-between;
-            gap: 8px;
-            background: var(--panel-color); padding: 8px 15px;
-            border-radius: 8px; border: 1px solid #3e3c3a; cursor: pointer;
-            width: 100%; /* Full width of container */
+            gap: 12px;
+            /* Darker background like the image */
+            background: #15171a; 
+            padding: 12px 20px;
+            border-radius: 16px; 
+            border: 1px solid #2d3035; 
+            cursor: pointer;
+            width: 100%; 
             max-width: 100%;
+            transition: background 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .balance-dropdown-trigger:active { background: #25282c; border-color: #444; }
+        
+        /* Icon Container */
+        .bal-icon-box {
+            display: flex; align-items: center; justify-content: center;
+            color: #39ff14; opacity: 0.8;
         }
         
-        .bal-label { font-size: 0.9rem; color: #aaa; font-weight: 600; letter-spacing: 1px; } /* Slightly larger label */
-        .bal-amount { font-size: 1.4rem; font-weight: 700; color: var(--accent-color); letter-spacing: 0.5px; }
-        .bal-arrow { font-size: 0.8rem; color: #888; transition: transform 0.3s; }
+        .bal-amount { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            /* Neon Green from image */
+            color: #39ff14; 
+            letter-spacing: 1px; 
+            font-family: "SF Mono", "Roboto Mono", monospace; 
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+            flex: 1;
+            text-align: center; /* Center the money */
+        }
+
+        .bal-arrow { font-size: 0.8rem; color: #6e7681; transition: transform 0.3s; margin-left: auto;}
         .bal-arrow.rotate { transform: rotate(180deg); }
 
         .history-panel {
-            position: absolute; top: 100%; left: 10px; right: 10px; /* Full width */
-            background: #2f2d2b; border: 1px solid #3e3c3a; border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: absolute; top: 100%; left: 10px; right: 10px;
+            background: #15171a; /* Match header dark bg */
+            border: 1px solid #2d3035; border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
             max-height: 0; 
-            /* overflow-y: auto; Removed for wrapper approach */
             transition: all 0.2s ease-in-out;
             opacity: 0; pointer-events: none; z-index: 600;
-            display: flex; flex-direction: column; /* For layout */
+            display: flex; flex-direction: column;
+            overflow: hidden; 
+            margin-top: 5px;
         }
-        .history-panel.open { max-height: 350px; opacity: 1; pointer-events: auto; margin-top: 5px; }
+        .history-panel.open { max-height: 350px; opacity: 1; pointer-events: auto; }
         
-        /* New Scroll Container for History */
         .history-scroll-container {
             overflow-y: auto;
             max-height: 350px;
             width: 100%;
         }
 
-        .hist-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px; border-bottom: 1px solid #3e3c3a; font-size: 0.9rem; color: #ccc; }
+        /* NEW: Empty State Style */
+        .history-empty {
+            padding: 30px;
+            text-align: center;
+            color: #6e7681;
+            font-style: italic;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .hist-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px; border-bottom: 1px solid #2d3035; font-size: 0.9rem; color: #ccc; }
         .net-pos { color: var(--col-profit); font-weight: 600; }
         .net-neg { color: var(--col-loss); }
         
-        /* Back to Top Icon - Now absolute relative to .history-panel (which is fixed height when open) */
+        /* Back to Top Icon */
         .back-to-top {
             position: absolute; bottom: 15px; right: 15px;
             background: rgba(58, 134, 255, 0.8); color: white;
@@ -120,7 +157,6 @@
             cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             z-index: 601; font-size: 1.2rem;
         }
-        /* No longer need .scrolled class on parent, will control visibility via JS based on scroll container */
 
         /* --- MAIN LAYOUT --- */
         .game-layout {
@@ -148,7 +184,7 @@
             align-items: center; justify-content: center; font-size: 18px; 
             transition: transform 0.1s; position: relative;
         }
-        /* Active Pick gets HIGHEST priority - !important ensures it overrides result colors */
+        /* Active Pick gets HIGHEST priority */
         .ball.active-pick { 
             background: var(--col-blue) !important; 
             color: white !important; 
@@ -278,7 +314,7 @@
         /* Win Overlay */
         .win-overlay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            background: rgba(40, 38, 36, 0.5); border: 2px solid var(--accent-color);backdrop-filter: blur(4px);
+            background: rgba(40, 38, 36, 0.2); border: 2px solid var(--accent-color);backdrop-filter: blur(4px);
             webkit-backdrop-filter: blur(4px);
             padding: 30px; border-radius: 20px; text-align: center; z-index: 999;
             pointer-events: none; transition: transform 0.2s ease-out; width: 80%; max-width: 300px;
@@ -324,7 +360,6 @@
         };
     </script>
 
-    <!-- TOP NAV -->
     <div class="nav-bar">
         <div class="nav-inner">
             <div class="nav-left">
@@ -334,22 +369,21 @@
             <div class="nav-right">
                 <button class="nav-icon" id="btnSound" onclick="toggleMute()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
                 <button class="nav-icon" onclick="alert('Notifications')">
-                    <!-- Notification Bell Icon -->
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- BALANCE DROPDOWN -->
     <div class="game-header-container">
         <div class="balance-dropdown-trigger" id="balanceTrigger" onclick="toggleHistory(event)">
-            <span class="bal-label">BALANCE</span> <!-- [REQ 2] Full Word -->
+            <div class="bal-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="M16.72 11.06h.94"></path></svg>
+            </div>
             <span class="bal-amount" id="balance">---</span>
             <span class="bal-arrow" id="balArrow">▼</span>
         </div>
         <div id="historyPanel" class="history-panel">
-            <!-- [REQ 3] Pagination Container -->
             <div class="history-scroll-container" onscroll="checkScroll(this)">
                 <div id="historyContent"></div> 
             </div>
@@ -357,22 +391,17 @@
         </div>
     </div>
 
-    <!-- MAIN GAME AREA -->
     <div class="game-layout">
-        <!-- GRID -->
         <div class="grid-container">
             <div class="keno-grid" id="grid"></div>
         </div>
 
-        <!-- PRIZE BOX -->
         <div class="paytable-wrapper">
             <div id="statusMsg" class="status-text">Pick 1-10 Numbers</div>
             <div class="pay-pills-container" id="paytablePills"></div>
         </div>
 
-        <!-- CONTROLS -->
         <div class="controls-wrapper">
-            <!-- Slider -->
             <div class="slider-row" id="sliderRow">
                 <span class="slider-label">Random</span>
                 <input type="range" id="pickSlider" min="0" max="10" value="4" 
@@ -383,18 +412,15 @@
                 </div>
             </div>
 
-           <!-- Single Row Buttons -->
-            <div class="buttons-row">
+           <div class="buttons-row">
                 <div class="btn-bet-grp">
                     <button class="btn-bet-act" onclick="changeBet(-1)">-</button>
                     <button class="btn-bet-val" id="betDisplay">$1.00</button>
                     <button class="btn-bet-act" onclick="changeBet(1)">+</button>
                 </div>
                 
-                <!-- PLAY (Moved to Middle) -->
                 <button class="btn-play" id="playBtn" onclick="manualPlay()">PLAY</button>
                 
-                <!-- Random Auto (Moved to Right) -->
                 <button class="btn-auto" id="btnAuto" onclick="toggleAutoPlay()">Random Auto</button>
                 
                 <button class="btn-clear" onclick="clearSelection()">🗑️</button>
@@ -402,14 +428,12 @@
         </div>
     </div>
 
-    <!-- OVERLAY -->
     <div id="winOverlay" class="win-overlay">
         <h2 style="color:white; margin:0; text-transform:uppercase; letter-spacing:2px; font-size: 1.5rem;">You Won</h2>
         <div id="winAmountDisplay" style="font-size:4rem; color:var(--accent-color); font-weight:900; margin:10px 0;">$0.00</div>
         <div style="font-size:0.9rem; color:#888; margin-top:5px;">Tap anywhere to close</div>
     </div>
 
-    <!-- AUTH/DEPOSIT MODAL -->
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal-box">
             <div id="modalTitle" class="modal-title">Authentication Required</div>
@@ -426,7 +450,7 @@
             drawSize: 10,
             // [BACKEND-INTEGRATION] Default Bet Settings - Fetch actual values from backend
             // [后端集成] 默认下注设置 - 需从后端获取实际值
-            betSteps: [1, 2, 5, 10, 20], 
+            betSteps: [1, 2, 5, 10, 20,50,100], 
             
             // Paytables
             // [BACKEND-INTEGRATION] Replace with fetch from Backend.checkPaytables()
@@ -441,7 +465,7 @@
 
         let state = { 
             balance: 0.00,  
-            bet: 1.00, 
+            bet: 5.00, 
             selected: [], 
             lastSelected: [], 
             lastDrawn: [], 
@@ -473,7 +497,7 @@
             fetchGameConfig: async () => { 
                 return {
                     paytables: CONFIG.paytables,
-                    betSteps: [1, 2, 5, 10, 20] 
+                    betSteps: [1, 2, 5, 10, 20,50,100] 
                 }; 
             },
 
@@ -563,7 +587,7 @@
                 updateBalanceUI();
             },
             triggerLogin: async function() {
-                showModal("Account Login / 账户登录", "Please log in to play. / 请登录以开始游戏。", "Login / 登录", async () => {
+                showModal("Account Login", "Please log in to play.", "Login", async () => {
                     const res = await BackendService.login();
                     if(res.isLoggedIn) {
                         state.isLoggedIn = true;
@@ -574,7 +598,7 @@
                 });
             },
             triggerDeposit: async function() {
-                alert("Insufficient Balance. Please deposit funds via your account dashboard.\n余额不足。请通过您的账户仪表板存款。");
+                alert("Insufficient Balance. Please deposit funds via your account dashboard.");
                 await BackendService.deposit();
             },
             refreshBalance: async function() {
@@ -633,7 +657,7 @@
         });
         document.body.addEventListener('click', () => AudioSys.init(), { once: true });
 
-        function exitGame() { if(confirm("Return to lobby? / 返回大厅?")) alert("Navigating to Lobby..."); }
+        function exitGame() { if(confirm("Return to lobby?")) alert("Navigating to Lobby..."); }
         function toggleMute() {
             const isMuted = AudioSys.toggleMute();
             const btn = document.getElementById('btnSound');
@@ -1011,13 +1035,18 @@
 
         function renderHistoryPanel() { 
             const p = document.getElementById('historyContent'); // Changed container
-            if(state.history.length === 0) return; 
+            p.innerHTML = ''; 
+
+            // [REQ] Empty State Logic
+            if (state.history.length === 0) {
+                p.innerHTML = '<div class="history-empty">No games played yet</div>';
+                return;
+            }
             
             // Only re-render full list if this is a fresh open or new item
             // For simplicity, re-render visible slice
             const visibleItems = state.history.slice(0, historyPageSize * historyPage);
             
-            p.innerHTML = ''; 
             visibleItems.forEach(r => { 
                 const row = document.createElement('div'); row.className = 'hist-row'; 
                 const c = r.net >= 0 ? 'net-pos' : 'net-neg'; 
