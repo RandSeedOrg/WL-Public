@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Randseed Keno v22 - SF Pro</title>
+    <title>Randseed Keno v2.25 - Local Debug & UI Polish</title>
     <style>
         :root {
-            /* WARMER THEME */
+            /* WARMER THEME - MATCHING ORIGINAL */
             --bg-color: #242220; 
             --panel-color: #2f2d2b; 
             --accent-color: #ffd700;
@@ -38,18 +38,25 @@
             overflow-x: hidden;
             user-select: none;
             cursor: pointer;
-            letter-spacing: -0.01em; /* Slight tightening for SF Pro look */
+            letter-spacing: -0.01em; 
         }
 
         /* --- TOP NAV BAR --- */
         .nav-bar {
             width: 100%; height: var(--nav-height);
             background: #2f2d2b; border-bottom: 1px solid #3e3c3a;
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: center; /* Center the inner content */
             padding: 0 10px; position: sticky; top: 0; z-index: 500;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             flex-shrink: 0;
         }
+
+        /* New Inner Container for Nav Bar to match Grid Width */
+        .nav-inner {
+            width: 100%; max-width: 600px; /* Match grid max-width */
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
         .nav-left, .nav-right { display: flex; align-items: center; gap: 10px; flex: 1; }
         .nav-right { justify-content: flex-end; }
         .nav-center { flex: 2; text-align: center; font-size: 1rem; font-weight: 600; color: #eee; }
@@ -63,7 +70,8 @@
         .game-header-container {
             width: 100%; max-width: 600px; position: relative;
             margin: 10px 0 5px 0; padding: 0 10px; z-index: 400;
-            display: flex; justify-content: flex-end; flex-shrink: 0;
+            display: flex; justify-content: center; /* Centered to match grid width visually */
+            flex-shrink: 0;
         }
         
         .balance-dropdown-trigger {
@@ -71,25 +79,48 @@
             gap: 8px;
             background: var(--panel-color); padding: 8px 15px;
             border-radius: 8px; border: 1px solid #3e3c3a; cursor: pointer;
-            width: 300px; max-width: 100%;
+            width: 100%; /* Full width of container */
+            max-width: 100%;
         }
         
-        .bal-label { font-size: 0.8rem; color: #888; font-weight: 600; }
+        .bal-label { font-size: 0.9rem; color: #aaa; font-weight: 600; letter-spacing: 1px; } /* Slightly larger label */
         .bal-amount { font-size: 1.4rem; font-weight: 700; color: var(--accent-color); letter-spacing: 0.5px; }
         .bal-arrow { font-size: 0.8rem; color: #888; transition: transform 0.3s; }
         .bal-arrow.rotate { transform: rotate(180deg); }
 
         .history-panel {
-            position: absolute; top: 100%; right: 10px; width: 300px;
+            position: absolute; top: 100%; left: 10px; right: 10px; /* Full width */
             background: #2f2d2b; border: 1px solid #3e3c3a; border-radius: 8px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            max-height: 0; overflow: hidden; transition: all 0.2s ease-in-out;
-            opacity: 0; pointer-events: none;
+            max-height: 0; 
+            /* overflow-y: auto; Removed for wrapper approach */
+            transition: all 0.2s ease-in-out;
+            opacity: 0; pointer-events: none; z-index: 600;
+            display: flex; flex-direction: column; /* For layout */
         }
         .history-panel.open { max-height: 350px; opacity: 1; pointer-events: auto; margin-top: 5px; }
+        
+        /* New Scroll Container for History */
+        .history-scroll-container {
+            overflow-y: auto;
+            max-height: 350px;
+            width: 100%;
+        }
+
         .hist-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px; border-bottom: 1px solid #3e3c3a; font-size: 0.9rem; color: #ccc; }
         .net-pos { color: var(--col-profit); font-weight: 600; }
         .net-neg { color: var(--col-loss); }
+        
+        /* Back to Top Icon - Now absolute relative to .history-panel (which is fixed height when open) */
+        .back-to-top {
+            position: absolute; bottom: 15px; right: 15px;
+            background: rgba(58, 134, 255, 0.8); color: white;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 601; font-size: 1.2rem;
+        }
+        /* No longer need .scrolled class on parent, will control visibility via JS based on scroll container */
 
         /* --- MAIN LAYOUT --- */
         .game-layout {
@@ -117,7 +148,16 @@
             align-items: center; justify-content: center; font-size: 18px; 
             transition: transform 0.1s; position: relative;
         }
-        .ball.active-pick { background: var(--col-blue) !important; color: white !important; border-color: #88ccff !important; box-shadow: 0 0 8px rgba(58, 134, 255, 0.6) !important; z-index: 100; }
+        /* Active Pick gets HIGHEST priority - !important ensures it overrides result colors */
+        .ball.active-pick { 
+            background: var(--col-blue) !important; 
+            color: white !important; 
+            border-color: #88ccff !important; 
+            box-shadow: 0 0 8px rgba(58, 134, 255, 0.6) !important; 
+            z-index: 100; 
+        }
+        
+        /* RESULT COLORS */
         .ball.hist-gold { background: var(--col-gold); color: black; border-color: #fff; box-shadow: 0 0 8px var(--col-gold); font-weight: 800; z-index: 10; }
         .ball.hist-red { background: #3a0000; border-color: var(--col-red); color: var(--col-red); opacity: 0.9; }
         
@@ -144,6 +184,10 @@
             text-align: center; color: #ffffff; font-size: 1.3rem; font-weight: 700;
             margin-bottom: 8px; min-height: 1.2em; transition: color 0.2s;
         }
+        /* New: Loading state for VRF wait time */
+        .status-loading { color: #88ccff !important; animation: pulseText 1s infinite; }
+        @keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
         .status-warn { color: #ffaa00 !important; font-weight: 700; animation: shake 0.4s; }
         @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-5px)} 100%{transform:translateX(0)} }
 
@@ -159,6 +203,7 @@
             display: flex; align-items: center; justify-content: center;
             border: 1px solid #4a4846; transition: all 0.2s;
         }
+        /* Highlight Winning Multiplier */
         .pay-pill.active .pay-hit-circle { background: var(--col-profit); color: #000; border-color: #fff; box-shadow: 0 0 6px var(--col-profit); transform: scale(1.1); }
         .pay-pill.active .pay-mult { color: var(--col-profit); }
 
@@ -225,18 +270,40 @@
             flex: 1.8; font-size: 1.4rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             box-shadow: 0 4px 10px rgba(57, 255, 20, 0.2); letter-spacing: 1px;
             font-weight: 700;
+            transition: background 0.3s, opacity 0.3s;
         }
-        .btn-play:disabled { background: #444; cursor: not-allowed; color: #888; box-shadow:none; }
+        /* Disable style for waiting period */
+        .btn-play:disabled { background: #444; cursor: not-allowed; color: #888; box-shadow:none; opacity: 0.7; }
 
         /* Win Overlay */
         .win-overlay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            background: rgba(40, 38, 36, 0.98); border: 2px solid var(--accent-color);
+            background: rgba(40, 38, 36, 0.5); border: 2px solid var(--accent-color);backdrop-filter: blur(4px);
+            webkit-backdrop-filter: blur(4px);
             padding: 30px; border-radius: 20px; text-align: center; z-index: 999;
             pointer-events: none; transition: transform 0.2s ease-out; width: 80%; max-width: 300px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
         .win-overlay.show { transform: translate(-50%, -50%) scale(1); }
+
+        /* Generic Modal (Login/Deposit) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--panel-color); border: 1px solid #4a4846;
+            padding: 25px; border-radius: 15px; text-align: center;
+            width: 85%; max-width: 320px;
+        }
+        .modal-title { font-size: 1.2rem; color: white; margin-bottom: 10px; font-weight: 700; }
+        .modal-msg { color: #ccc; margin-bottom: 20px; font-size: 0.95rem; word-break: break-all; }
+        .modal-btn { 
+            background: var(--col-blue); color: white; padding: 10px 20px; 
+            border-radius: 8px; width: 100%; margin-bottom: 10px;
+        }
+        .modal-btn-sec { background: transparent; border: 1px solid #555; color: #aaa; }
 
     </style>
 </head>
@@ -258,25 +325,36 @@
     </script>
 
     <!-- TOP NAV -->
- <div class="nav-bar">
-        <div class="nav-left">
-            <button class="nav-icon" onclick="exitGame()"><svg style="transform: scaleX(-1);" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
-        </div>
-        <div class="nav-center">Randseed Keno</div>
-        <div class="nav-right">
-            <button class="nav-icon" id="btnSound" onclick="toggleMute()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
-            <button class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></button>
+    <div class="nav-bar">
+        <div class="nav-inner">
+            <div class="nav-left">
+                <button class="nav-icon" onclick="exitGame()"><svg style="transform: scaleX(-1);" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
+            </div>
+            <div class="nav-center">Randseed Keno</div>
+            <div class="nav-right">
+                <button class="nav-icon" id="btnSound" onclick="toggleMute()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+                <button class="nav-icon" onclick="alert('Notifications')">
+                    <!-- Notification Bell Icon -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- BALANCE DROPDOWN -->
     <div class="game-header-container">
         <div class="balance-dropdown-trigger" id="balanceTrigger" onclick="toggleHistory(event)">
-            <span class="bal-label">BAL</span>
-            <span class="bal-amount" id="balance">$1,000.00</span>
+            <span class="bal-label">BALANCE</span> <!-- [REQ 2] Full Word -->
+            <span class="bal-amount" id="balance">---</span>
             <span class="bal-arrow" id="balArrow">▼</span>
         </div>
-        <div id="historyPanel" class="history-panel"><div style="padding:15px; text-align:center; color:#555; font-size:0.8rem;">No history yet</div></div>
+        <div id="historyPanel" class="history-panel">
+            <!-- [REQ 3] Pagination Container -->
+            <div class="history-scroll-container" onscroll="checkScroll(this)">
+                <div id="historyContent"></div> 
+            </div>
+            <div class="back-to-top" id="backToTop" onclick="scrollToTop(event)">⬆</div>
+        </div>
     </div>
 
     <!-- MAIN GAME AREA -->
@@ -305,7 +383,7 @@
                 </div>
             </div>
 
-            <!-- Single Row Buttons -->
+           <!-- Single Row Buttons -->
             <div class="buttons-row">
                 <div class="btn-bet-grp">
                     <button class="btn-bet-act" onclick="changeBet(-1)">-</button>
@@ -313,13 +391,13 @@
                     <button class="btn-bet-act" onclick="changeBet(1)">+</button>
                 </div>
                 
-                <button class="btn-clear" onclick="clearSelection()">🗑️</button>
+                <!-- PLAY (Moved to Middle) -->
+                <button class="btn-play" id="playBtn" onclick="manualPlay()">PLAY</button>
                 
-                <!-- Random Auto -->
+                <!-- Random Auto (Moved to Right) -->
                 <button class="btn-auto" id="btnAuto" onclick="toggleAutoPlay()">Random Auto</button>
                 
-                <!-- PLAY -->
-                <button class="btn-play" id="playBtn" onclick="manualPlay()">PLAY</button>
+                <button class="btn-clear" onclick="clearSelection()">🗑️</button>
             </div>
         </div>
     </div>
@@ -331,12 +409,223 @@
         <div style="font-size:0.9rem; color:#888; margin-top:5px;">Tap anywhere to close</div>
     </div>
 
+    <!-- AUTH/DEPOSIT MODAL -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modalTitle" class="modal-title">Authentication Required</div>
+            <div id="modalMsg" class="modal-msg">Please sign in to play Randseed Keno.</div>
+            <button id="modalActionBtn" class="modal-btn">Sign In</button>
+            <button class="modal-btn modal-btn-sec" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
     <script>
+        // --- 1. CONFIG & STATE ---
+        const CONFIG = {
+            totalNumbers: 40,
+            drawSize: 10,
+            // [BACKEND-INTEGRATION] Default Bet Settings - Fetch actual values from backend
+            // [后端集成] 默认下注设置 - 需从后端获取实际值
+            betSteps: [1, 2, 5, 10, 20], 
+            
+            // Paytables
+            // [BACKEND-INTEGRATION] Replace with fetch from Backend.checkPaytables()
+            // [后端集成] 请替换为从后端 fetchGameConfig 获取的动态数据
+            paytables: { 
+                1: {1:3.5}, 2: {2:16}, 3: {2:0.5, 3:75}, 4: {3:8, 4:240}, 
+                5: {3:3, 4:45, 5:430}, 6: {4:9, 5:330, 6:680}, 
+                7: {4:5, 5:80, 6:380, 7:770}, 8: {4:3.5, 5:17, 6:250, 7:550, 8:850}, 
+                9: {4:3, 5:8, 6:40, 7:450, 8:750, 9:950}, 10: {4:2.5, 5:6, 6:10, 7:50, 8:450, 9:750, 10:1000} 
+            }
+        };
+
+        let state = { 
+            balance: 0.00,  
+            bet: 1.00, 
+            selected: [], 
+            lastSelected: [], 
+            lastDrawn: [], 
+            isPlaying: false, 
+            isAutoPlaying: false, 
+            pickMode: 'random', 
+            sliderValue: 4, 
+            history: [],
+            isLoggedIn: false,
+            // [BATCH-QUEUE] 
+            gameQueue: [], 
+            isFetchingBatch: false,
+            // [VIEW FLAG]
+            isResultView: false 
+        };
+
+        // --- 2. BACKEND API SERVICE ---
+        /* [BACKEND STRATEGY / 后端策略] 
+           1. Manual Play: Calls 'playRound' -> 'playBatch(count=1)'.
+           2. Auto Play: Calls 'fetchBatch(count=10)'. This hides the 3-5s VRF delay.
+           3. Local Mock: 'simulateNetworkDelay' + 'Math.random'.
+        */
+        const BackendService = {
+            // Simulate 3-5s VRF delay
+            simulateNetworkDelay: () => new Promise(resolve => setTimeout(resolve, 3500)), 
+
+            // [BACKEND-INTEGRATION] Fetch Game Configuration (Paytables & Bet Steps)
+            // [后端集成] 获取游戏配置 (赔率表 & 下注步长)
+            fetchGameConfig: async () => { 
+                return {
+                    paytables: CONFIG.paytables,
+                    betSteps: [1, 2, 5, 10, 20] 
+                }; 
+            },
+
+            // [BACKEND-INTEGRATION] Check Session Status
+            // [后端集成] 检查会话状态
+            getUserStatus: async () => {
+                return { isLoggedIn: false, pid: null, balance: 0 };
+            },
+
+            // [BACKEND-INTEGRATION] Login
+            // [后端集成] 登录
+            login: async () => {
+                await new Promise(r => setTimeout(r, 1000));
+                return { isLoggedIn: true, pid: "user-123", balance: 1000.00 };
+            },
+
+            // [BACKEND-INTEGRATION] Deposit
+            // [后端集成] 存款
+            deposit: async () => {
+                console.log("Triggering external deposit flow...");
+                return { success: true }; 
+            },
+
+            /* [BACKEND STRATEGY / 后端策略] Batch Play Logic */
+            playBatch: async (pid, betAmount, selectedNumbers, batchSize = 10, pickMode = 'manual', randomCount = 0) => {
+                console.log(`[Backend] Batch Request: Size=${batchSize}, Mode=${pickMode}`);
+                await BackendService.simulateNetworkDelay(); 
+                
+                const batchResults = [];
+                for(let i=0; i<batchSize; i++) {
+                    // [REQ 1] Random Auto Logic:
+                    // If mode is random, we generate NEW numbers for each round in the batch here.
+                    // Ideally, frontend sends `pickMode: 'random', count: 4` and backend generates numbers.
+                    // Or frontend generates 10 sets of numbers and sends them.
+                    // Here we simulate backend generation for random mode.
+                    
+                    let currentSelection = selectedNumbers;
+                    if (pickMode === 'random' && batchSize > 1) {
+                        // Generate random selection for this specific round in the batch
+                        currentSelection = [];
+                        while(currentSelection.length < randomCount) {
+                            let r = Math.floor(Math.random() * CONFIG.totalNumbers) + 1;
+                            if(!currentSelection.includes(r)) currentSelection.push(r);
+                        }
+                    }
+
+                    // Generate Win Numbers (VRF Mock)
+                    const drawn = [];
+                    while(drawn.length < CONFIG.drawSize) { 
+                        let r = Math.floor(Math.random() * CONFIG.totalNumbers) + 1; 
+                        if(!drawn.includes(r)) drawn.push(r); 
+                    }
+                    
+                    // Match Win Logic
+                    let hits = 0;
+                    drawn.forEach(d => { if(currentSelection.includes(d)) hits++; });
+
+                    const paytable = CONFIG.paytables[currentSelection.length] || {};
+                    const multiplier = paytable[hits] || 0;
+                    const winAmount = betAmount * multiplier;
+                    const netGain = winAmount - betAmount;
+
+                    batchResults.push({
+                        success: true,
+                        drawnNumbers: drawn,
+                        usedSelection: currentSelection, // Return what was used so frontend can update UI
+                        hits: hits,
+                        winAmount: winAmount,
+                        netGain: netGain
+                    });
+                }
+                return { results: batchResults };
+            },
+
+            playRound: async (pid, betAmount, selectedNumbers) => {
+                const res = await BackendService.playBatch(pid, betAmount, selectedNumbers, 1, 'manual');
+                return res.results[0];
+            }
+        };
+
+        // --- 3. USER SESSION ---
+        const UserSession = {
+            init: async function() {
+                const status = await BackendService.getUserStatus();
+                state.isLoggedIn = status.isLoggedIn;
+                if(status.isLoggedIn) state.balance = status.balance;
+                updateBalanceUI();
+            },
+            triggerLogin: async function() {
+                showModal("Account Login / 账户登录", "Please log in to play. / 请登录以开始游戏。", "Login / 登录", async () => {
+                    const res = await BackendService.login();
+                    if(res.isLoggedIn) {
+                        state.isLoggedIn = true;
+                        state.balance = res.balance;
+                        updateBalanceUI();
+                        closeModal();
+                    }
+                });
+            },
+            triggerDeposit: async function() {
+                alert("Insufficient Balance. Please deposit funds via your account dashboard.\n余额不足。请通过您的账户仪表板存款。");
+                await BackendService.deposit();
+            },
+            refreshBalance: async function() {
+                const status = await BackendService.getUserStatus();
+                if(status.isLoggedIn) state.balance = status.balance;
+                updateBalanceUI();
+            }
+        };
+
+        // --- 4. INIT ---
+        window.onload = async function() { 
+            const remoteConfig = await BackendService.fetchGameConfig();
+            if(remoteConfig) {
+                if(remoteConfig.paytables) Object.assign(CONFIG.paytables, remoteConfig.paytables);
+                // [BACKEND-INTEGRATION] Load dynamic bet steps
+                // [后端集成] 加载动态下注步长
+                if(remoteConfig.betSteps) CONFIG.betSteps = remoteConfig.betSteps;
+            }
+            
+            initGrid(); 
+            
+            // FIX Issue 3: Default random pick 4 on load
+            state.pickMode = 'random';
+            state.sliderValue = 4;
+            generateRandomSelection(4); 
+            
+            // Ensure bet is valid based on config
+            if(!CONFIG.betSteps.includes(state.bet)) state.bet = CONFIG.betSteps[0];
+            updateBetDisplay(); 
+
+            await UserSession.init();
+        };
+
+        function initGrid() {
+            const gridEl = document.getElementById('grid'); gridEl.innerHTML = ''; 
+            for (let i = 1; i <= CONFIG.totalNumbers; i++) {
+                let btn = document.createElement('div'); btn.className = 'ball'; btn.innerText = i; btn.id = `ball-${i}`;
+                btn.onclick = (e) => { e.stopPropagation(); toggleNumber(i); };
+                gridEl.appendChild(btn);
+            }
+        }
+
+        // --- 5. UI INTERACTIONS ---
         document.addEventListener('click', function(e) {
             const overlay = document.getElementById('winOverlay');
             if (overlay.classList.contains('show')) overlay.classList.remove('show');
             const histPanel = document.getElementById('historyPanel');
             const balTrigger = document.getElementById('balanceTrigger');
+            // [REQ 3] Close win popup on click
+            if (overlay.classList.contains('show')) overlay.classList.remove('show');
+
             if (histPanel.classList.contains('open') && !balTrigger.contains(e.target)) {
                 histPanel.classList.remove('open');
                 document.getElementById('balArrow').classList.remove('rotate');
@@ -344,7 +633,7 @@
         });
         document.body.addEventListener('click', () => AudioSys.init(), { once: true });
 
-        function exitGame() { alert("Returning to Main Page..."); }
+        function exitGame() { if(confirm("Return to lobby? / 返回大厅?")) alert("Navigating to Lobby..."); }
         function toggleMute() {
             const isMuted = AudioSys.toggleMute();
             const btn = document.getElementById('btnSound');
@@ -352,149 +641,147 @@
             btn.style.opacity = isMuted ? "0.5" : "1";
         }
 
-        const TOTAL_NUMBERS = 40, DRAW_SIZE = 10;
+        function onSliderInput(val) { AudioSys.slide(); const num = parseInt(val); const valSpan = document.getElementById('pickVal'); const slider = document.getElementById('pickSlider'); document.getElementById('sliderRow').classList.remove('warn'); setStatus("Pick 1-10 Numbers"); if (num === 0) { valSpan.innerText = "OFF"; valSpan.className = "slider-val-off"; slider.classList.add("slider-off"); } else { valSpan.innerText = num; valSpan.className = "slider-val-text"; slider.classList.remove("slider-off"); } }
         
-        // --- CUSTOM PAYTABLE CONFIGURATION ---
-        const PAYTABLES = { 
-            1: {1:3.5}, 
-            2: {2:16}, 
-            3: {2:0.5, 3:75}, 
-            4: {3:8, 4:240}, 
-            5: {3:3, 4:45, 5:430}, 
-            6: {4:9, 5:330, 6:680}, 
-            7: {4:5, 5:80, 6:380, 7:770}, 
-            8: {4:3.5, 5:17, 6:250, 7:550, 8:850}, 
-            9: {4:3, 5:8, 6:40, 7:450, 8:750, 9:950}, 
-            10: {4:2.5, 5:6, 6:10, 7:50, 8:450, 9:750, 10:1000} 
-        };
-        
-        let state = { 
-            balance: 1000.00, 
-            bet: 1.00, 
-            selected: [], lastSelected: [], lastDrawn: [], 
-            isPlaying: false, isAutoPlaying: false, 
-            pickMode: 'random', 
-            sliderValue: 4, 
-            history: [] 
-        };
-
-        window.onload = function() { initGrid(); generateRandomSelection(4); updateBalance(); };
-
-        function initGrid() {
-            const gridEl = document.getElementById('grid'); gridEl.innerHTML = ''; 
-            for (let i = 1; i <= TOTAL_NUMBERS; i++) {
-                let btn = document.createElement('div'); btn.className = 'ball'; btn.innerText = i; btn.id = `ball-${i}`;
-                btn.onclick = (e) => { e.stopPropagation(); toggleNumber(i); };
-                gridEl.appendChild(btn);
-            }
-        }
-
-        // SLIDER UPDATE LOGIC
-        function onSliderInput(val) { 
-            AudioSys.slide();
-            const num = parseInt(val);
-            const valSpan = document.getElementById('pickVal');
-            const slider = document.getElementById('pickSlider');
-            
-            // Clear warning
-            document.getElementById('sliderRow').classList.remove('warn');
-            const statusEl = document.getElementById('statusMsg');
-            if(statusEl.innerText.includes("Select Random")) statusEl.innerText = "Pick 1-10 Numbers";
-            statusEl.classList.remove('status-warn');
-
-            if (num === 0) {
-                valSpan.innerText = "OFF";
-                valSpan.className = "slider-val-off";
-                slider.classList.add("slider-off");
-            } else {
-                valSpan.innerText = num;
-                valSpan.className = "slider-val-text";
-                slider.classList.remove("slider-off");
-            }
-        }
-
         function onSliderChange(val) { 
             AudioSys.click(); 
-            if(state.isAutoPlaying) stopAutoPlay();
+            hideWinOverlay(); // [REQ 3] Close win popup
+            if(state.isAutoPlaying) stopAutoPlay(); 
             
-            const num = parseInt(val);
-            if (num === 0) {
-                state.pickMode = 'manual';
-                state.selected = [];
-                updateUI();
-            } else {
+            // [UI FIX] Do not clear results when dragging slider - allow new selection overlay
+            
+            const num = parseInt(val); 
+            if (num === 0) { 
+                state.pickMode = 'manual'; 
+                state.selected = []; 
+                updateUI(); 
+            } else { 
                 state.sliderValue = num; 
                 state.pickMode = 'random'; 
-                generateRandomSelection(state.sliderValue);
-            }
+                
+                // If in result view, clear old selection logic to start new
+                if(state.isResultView) {
+                    state.selected = [];
+                }
+                generateRandomSelection(state.sliderValue); 
+            } 
         }
 
         function generateRandomSelection(qty) { 
             state.selected = []; 
             while(state.selected.length < qty) { 
-                let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1; 
+                let r = Math.floor(Math.random() * CONFIG.totalNumbers) + 1; 
                 if(!state.selected.includes(r)) state.selected.push(r); 
             } 
             updateUI(); 
         }
-
-        function toggleHistory(e) { if(e) e.stopPropagation(); AudioSys.click(); document.getElementById('historyPanel').classList.toggle('open'); document.getElementById('balArrow').classList.toggle('rotate'); }
-
+        
+        function toggleHistory(e) { 
+            if(e) e.stopPropagation(); 
+            AudioSys.click(); 
+            hideWinOverlay(); // [REQ 3] Close win popup
+            document.getElementById('historyPanel').classList.toggle('open'); 
+            document.getElementById('balArrow').classList.toggle('rotate'); 
+            renderHistoryPanel(); // Render initial page
+        }
+        
+        // FIX Issue 2 Revised: Interaction Logic to PERSIST Results but START NEW Selection
         function toggleNumber(num) { 
             if (state.isPlaying) return; 
             AudioSys.click(); 
+            hideWinOverlay(); // [REQ 3] Close win popup
             if(state.isAutoPlaying) stopAutoPlay(); 
-            switchToManualMode();
+            
+            // Logic: If in "Result View", start NEW selection on top of old results
+            if (state.isResultView) {
+                // Check if this is the first interaction after a round
+                // We check if selected matches lastSelected (meaning untouched)
+                const isSame = state.selected.length === state.lastSelected.length && state.selected.every((v,i)=>v===state.lastSelected[i]);
+                
+                if (isSame) {
+                    state.selected = []; // Clear logic to start fresh pick
+                }
+            }
+            
+            switchToManualMode(); 
+            
+            // Standard Toggle
             const idx = state.selected.indexOf(num); 
             if (idx > -1) state.selected.splice(idx, 1); 
             else if (state.selected.length < 10) state.selected.push(num); 
+            
             updateUI(); 
         }
-
-        function switchToManualMode() {
-            state.pickMode = 'manual';
-            const slider = document.getElementById('pickSlider');
-            slider.value = 0;
-            slider.classList.add("slider-off");
-            const valSpan = document.getElementById('pickVal');
-            valSpan.innerText = "OFF";
-            valSpan.className = "slider-val-off";
-        }
-
+        
+        function switchToManualMode() { state.pickMode = 'manual'; const slider = document.getElementById('pickSlider'); slider.value = 0; slider.classList.add("slider-off"); const valSpan = document.getElementById('pickVal'); valSpan.innerText = "OFF"; valSpan.className = "slider-val-off"; }
+        
         function clearSelection() { 
             if (state.isPlaying) return; 
             AudioSys.click(); 
+            hideWinOverlay(); // [REQ 3] Close win popup
             if(state.isAutoPlaying) stopAutoPlay(); 
+            
+            // [UI FIX] Clear button only clears the BLUE selection
             state.selected = []; 
-            switchToManualMode();
+            
+            switchToManualMode(); 
             updateUI(); 
         }
+        
+        // [DYNAMIC BET STEPS / 动态下注步长]
+        // Updated to use CONFIG.betSteps
+        function changeBet(dir) { 
+            if (state.isPlaying) return; 
+            AudioSys.click(); 
+            hideWinOverlay(); // [REQ 3] Close win popup
+            const steps = CONFIG.betSteps; 
+            let i = steps.indexOf(state.bet); 
+            if (dir === 1 && i < steps.length - 1) state.bet = steps[i + 1]; 
+            if (dir === -1 && i > 0) state.bet = steps[i - 1]; 
+            updateBetDisplay();
+        }
+        
+        function updateBetDisplay() {
+            document.getElementById('betDisplay').innerText = `$${state.bet.toFixed(2)}`;
+        }
+        
+        // --- 6. AUTO PLAY LOGIC (BUFFERED) ---
 
-        function changeBet(dir) { if (state.isPlaying) return; AudioSys.click(); const a = [1, 2, 5, 10, 20]; let i = a.indexOf(state.bet); if (dir === 1 && i < a.length - 1) state.bet = a[i + 1]; if (dir === -1 && i > 0) state.bet = a[i - 1]; document.getElementById('betDisplay').innerText = `$${state.bet.toFixed(2)}`; updateUI(); }
+        function toggleAutoPlay() { AudioSys.toggle(); hideWinOverlay(); if(state.isAutoPlaying) stopAutoPlay(); else startAutoPlay(); }
         
-        function toggleAutoPlay() { AudioSys.toggle(); if(state.isAutoPlaying) stopAutoPlay(); else startAutoPlay(); }
-        
-        function startAutoPlay() { 
-            // STRICT CHECK: If Slider is 0, DO NOT START.
+        async function startAutoPlay() { 
             const sliderVal = parseInt(document.getElementById('pickSlider').value);
             if (sliderVal === 0) {
                 AudioSys.error();
-                const statusEl = document.getElementById('statusMsg');
-                statusEl.innerText = "⚠ Select Random Amount";
-                statusEl.classList.remove('status-warn'); void statusEl.offsetWidth; statusEl.classList.add('status-warn');
+                setStatus("⚠ Select Random Amount", true);
                 const sliderRow = document.getElementById('sliderRow');
                 sliderRow.classList.remove('warn'); void sliderRow.offsetWidth; sliderRow.classList.add('warn');
                 return; 
             }
+            if(!state.isLoggedIn) { UserSession.triggerLogin(); return; }
 
-            if (state.balance < state.bet) return; 
             state.pickMode = 'random';
             state.sliderValue = sliderVal;
+            // [REQ 1] Random Mode: Frontend generates random selects?
+            // Actually for consistency, we generate first one here.
+            // Backend handles subsequent rounds for batching if we use that strategy.
             if (state.selected.length === 0) generateRandomSelection(state.sliderValue); 
+            
             state.isAutoPlaying = true; 
+            state.gameQueue = []; 
             document.getElementById('btnAuto').innerText = "Stop"; 
             document.getElementById('btnAuto').classList.add('active'); 
-            playGame(); 
+            
+            document.getElementById('playBtn').disabled = true;
+            setStatus("Loading Batch...", false, true);
+            
+            // [UX FIX] Clear previous results immediately when starting AutoPlay
+            state.lastDrawn = [];
+            state.isResultView = false;
+            updateUI();
+
+            await fetchBatch(10);
+            processAutoPlayQueue(); 
         }
         
         function stopAutoPlay() { 
@@ -502,56 +789,312 @@
             document.getElementById('btnAuto').innerText = "Random Auto"; 
             document.getElementById('btnAuto').classList.remove('active'); 
         }
-        
-        function manualPlay() { AudioSys.click(); if(state.isAutoPlaying) stopAutoPlay(); playGame(); }
 
-        async function playGame() {
-            // 1. SMART REPLAY
-            if (!state.isAutoPlaying && state.pickMode === 'manual' && state.selected.length === 0 && state.lastSelected.length > 0) {
-                state.selected = [...state.lastSelected];
-                updateUI();
-                await new Promise(r => setTimeout(r, 200));
+        async function fetchBatch(count) {
+            if(state.isFetchingBatch) return;
+            state.isFetchingBatch = true;
+            try {
+                // [FIX] Ensure we use current valid selection or fallback
+                const nums = state.selected.length > 0 ? state.selected : state.lastSelected;
+                
+                // [REQ 1] If random mode, we should tell backend to use random numbers
+                // We send 'random' mode flag and the size (sliderValue)
+                const mode = state.pickMode; // 'random' or 'manual'
+                const randomCnt = state.sliderValue;
+
+                // [BACKEND-INTEGRATION] Batch Play Call
+                // [后端集成] 批量游戏调用
+                const response = await BackendService.playBatch("user-pid", state.bet, nums, count, mode, randomCnt);
+                state.gameQueue.push(...response.results);
+            } catch(e) {
+                console.error("Batch failed", e);
+                stopAutoPlay();
+                setStatus("Network Error", true);
             }
-            // 2. RANDOM MODE
-            else if (state.pickMode === 'random') { 
-                if (state.sliderValue > 0) {
-                    generateRandomSelection(state.sliderValue); 
-                    await new Promise(r => setTimeout(r, 100)); 
+            state.isFetchingBatch = false;
+        }
+
+        async function processAutoPlayQueue() {
+            if (!state.isAutoPlaying) {
+                document.getElementById('playBtn').disabled = false;
+                state.isPlaying = false;
+                setStatus("Auto Play Stopped");
+                return;
+            }
+
+            if (state.gameQueue.length <= 2 && !state.isFetchingBatch) {
+                console.log("Queue low, pre-fetching next batch...");
+                fetchBatch(10); 
+            }
+
+            if (state.gameQueue.length === 0) {
+                if (state.isFetchingBatch) {
+                    setStatus("Buffering...", false, true);
+                    await new Promise(r => setTimeout(r, 500));
+                    processAutoPlayQueue(); 
+                    return;
+                } else {
+                    stopAutoPlay();
+                    return;
                 }
             }
 
-            if (state.selected.length === 0 || state.balance < state.bet) { stopAutoPlay(); return; }
-            document.getElementById('winOverlay').classList.remove('show');
-            state.isPlaying = true; const currentBet = state.bet; state.balance -= currentBet; updateBalance();
-            state.lastSelected = []; state.lastDrawn = []; updateUI();
-            document.getElementById('playBtn').disabled = true; document.getElementById('statusMsg').innerText = "Drawing...";
-            const drawn = []; while(drawn.length < DRAW_SIZE) { let r = Math.floor(Math.random() * TOTAL_NUMBERS) + 1; if(!drawn.includes(r)) drawn.push(r); }
-            let hits = 0;
-            for (let i = 0; i < DRAW_SIZE; i++) {
-                await new Promise(r => setTimeout(r, 50)); const num = drawn[i]; AudioSys.pop();
-                const ball = document.getElementById(`ball-${num}`);
-                if (state.selected.includes(num)) { ball.classList.add('hist-gold'); hits++; } else { ball.classList.add('hist-drawn'); }
+            const result = state.gameQueue.shift();
+            
+            // [REQ 1] Update frontend 'selected' to match what the backend actually used
+            // This ensures visuals match result if backend generated random numbers
+            if (result.usedSelection) {
+                state.selected = [...result.usedSelection];
+                // Also update slider if it was random mode to reflect count? optional
             }
-            const spots = state.selected.length; const paytable = PAYTABLES[spots]; const multiplier = paytable[hits] || 0; const winAmount = currentBet * multiplier;
-            const now = new Date(); const ts = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-            state.history.unshift({ time: ts, hits: hits, total: spots, net: winAmount - currentBet }); renderHistoryPanel();
-            if (winAmount > 0) {
-                state.balance += winAmount; AudioSys.win(); showWin(winAmount);
-                document.getElementById('statusMsg').innerText = `WON $${winAmount.toFixed(2)}!`;
-                drawn.forEach(d => { if(state.selected.includes(d)) document.getElementById(`ball-${d}`).classList.add('pulsing'); });
-            } else { document.getElementById('statusMsg').innerText = "No match"; }
-            state.lastSelected = [...state.selected]; state.lastDrawn = [...drawn]; state.selected = [];
-            state.isPlaying = false; document.getElementById('playBtn').disabled = false; updateBalance(); updateUI();
-            if (state.isAutoPlaying) { if (state.balance >= state.bet) { setTimeout(() => { if(state.isAutoPlaying) playGame(); }, 2000); } else { stopAutoPlay(); } }
+
+            if (state.balance < state.bet) { stopAutoPlay(); UserSession.triggerDeposit(); return; }
+
+            document.getElementById('winOverlay').classList.remove('show');
+            state.isPlaying = true;
+            
+            state.balance -= state.bet;
+            updateBalanceUI();
+
+            // if(state.pickMode === 'random') generateRandomSelection(state.sliderValue); // Removed, backend handles now
+            
+            state.lastSelected = [...state.selected];
+            state.lastDrawn = [];
+            state.isResultView = false; // Reset view for animation
+            
+            // [UI FIX] Clear selected JUST BEFORE animation loop
+            const savedSelection = [...state.selected];
+            state.selected = []; 
+            updateUI(); 
+            state.selected = savedSelection; 
+            
+            setStatus("Drawing...");
+
+            const drawn = result.drawnNumbers;
+            let hits = 0;
+            
+            for (let i = 0; i < CONFIG.drawSize; i++) {
+                await new Promise(r => setTimeout(r, 40)); 
+                const num = drawn[i]; 
+                AudioSys.pop();
+                const ball = document.getElementById(`ball-${num}`);
+                if (state.lastSelected.includes(num)) { ball.classList.add('hist-gold'); hits++; } 
+                else { ball.classList.add('hist-drawn'); }
+            }
+            
+            state.balance = state.balance + result.winAmount; 
+            updateBalanceUI();
+
+            const now = new Date(); 
+            const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            state.history.unshift({ time: ts, hits: hits, total: state.lastSelected.length, net: result.netGain }); 
+            renderHistoryPanel(); // Refresh history list
+
+            // Result View Logic
+            state.selected = []; // Ensure empty for UI result prioritization
+            state.lastDrawn = [...drawn];
+            state.isResultView = true; // Flag enabled
+            updateUI();
+            
+            if (result.winAmount > 0) {
+                AudioSys.win(); 
+                showWin(result.winAmount);
+                setStatus(`WON $${result.winAmount.toFixed(2)}!`);
+                drawn.forEach(d => { if(state.lastSelected.includes(d)) document.getElementById(`ball-${d}`).classList.add('pulsing'); });
+            } else { 
+                setStatus("No match"); 
+            }
+
+            // [REQ 1] Wait time for Auto Play win display
+            const delay = result.winAmount > 0 ? 3000 : 1000;
+            await new Promise(r => setTimeout(r, delay));
+            processAutoPlayQueue();
         }
 
+        function manualPlay() { AudioSys.click(); hideWinOverlay(); if(state.isAutoPlaying) stopAutoPlay(); playSingleRound(); }
+
+        async function playSingleRound() {
+            if(!state.isLoggedIn) { UserSession.triggerLogin(); return; }
+            if (state.balance < state.bet) { UserSession.triggerDeposit(); return; }
+
+            if (state.selected.length === 0 && state.lastSelected.length > 0) {
+                 state.selected = [...state.lastSelected];
+            }
+            
+            if (state.selected.length === 0) return; 
+
+            document.getElementById('winOverlay').classList.remove('show');
+            state.isPlaying = true; 
+            document.getElementById('playBtn').disabled = true; 
+            state.balance -= state.bet; 
+            updateBalanceUI();
+            
+            // Snapshot current selection
+            state.lastSelected = [...state.selected]; 
+            state.lastDrawn = []; 
+            state.isResultView = false;
+            
+            // [UI FIX] Clear previous results immediately upon clicking PLAY
+            // This ensures only the user's selected numbers (Blue) are visible during the wait.
+            // We do this by effectively resetting the Result View and lastDrawn
+            state.lastDrawn = []; 
+            updateUI(); 
+            
+            setStatus("Waiting for Blockchain...", false, true); 
+
+            try {
+                // [BACKEND-INTEGRATION] Single Round Call
+                // [后端集成] 单局游戏调用
+                const result = await BackendService.playRound("pid", state.bet, state.selected);
+                
+                // Clear selected now to start animation phase
+                const savedSelection = [...state.selected];
+                state.selected = [];
+                updateUI(); 
+
+                const drawn = result.drawnNumbers;
+                setStatus("Drawing...");
+                let hits = 0;
+                for (let i = 0; i < CONFIG.drawSize; i++) {
+                    await new Promise(r => setTimeout(r, 50)); 
+                    const num = drawn[i]; 
+                    AudioSys.pop();
+                    const ball = document.getElementById(`ball-${num}`);
+                    if (state.lastSelected.includes(num)) { ball.classList.add('hist-gold'); hits++; } 
+                    else { ball.classList.add('hist-drawn'); }
+                }
+                
+                state.balance = state.balance + result.winAmount;
+                updateBalanceUI();
+                
+                const now = new Date(); 
+                const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+                state.history.unshift({ time: ts, hits: hits, total: state.lastSelected.length, net: result.netGain }); 
+                renderHistoryPanel();
+
+                state.lastDrawn = [...drawn];
+                state.isResultView = true; // ENABLE Result View Flag
+                
+                updateUI(); 
+
+                if (result.winAmount > 0) {
+                    AudioSys.win(); 
+                    showWin(result.winAmount);
+                    setStatus(`WON $${result.winAmount.toFixed(2)}!`);
+                    drawn.forEach(d => { if(state.lastSelected.includes(d)) document.getElementById(`ball-${d}`).classList.add('pulsing'); });
+                } else { 
+                    setStatus("No match"); 
+                }
+
+            } catch (err) {
+                console.error(err);
+                setStatus("Network Error", true);
+                state.balance += state.bet; 
+                state.selected = state.lastSelected; 
+                updateUI();
+            }
+
+            state.isPlaying = false; 
+            document.getElementById('playBtn').disabled = false; 
+        }
+
+        // --- 7. HELPER FUNCTIONS ---
+        function showModal(title, msg, btnText, actionFn) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalMsg').innerText = msg; const btn = document.getElementById('modalActionBtn'); btn.innerText = btnText; btn.onclick = actionFn; document.getElementById('modalOverlay').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        function setStatus(msg, isWarn=false, isLoading=false) { const el = document.getElementById('statusMsg'); el.innerText = msg; el.className = 'status-text'; if(isWarn) el.classList.add('status-warn'); if(isLoading) el.classList.add('status-loading'); }
         function showWin(amount) { document.getElementById('winAmountDisplay').innerText = `$${amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; document.getElementById('winOverlay').classList.add('show'); }
-        function renderHistoryPanel() { const p = document.getElementById('historyPanel'); if(state.history.length === 0) return; p.innerHTML = ''; state.history.forEach(r => { const row = document.createElement('div'); row.className = 'hist-row'; const c = r.net >= 0 ? 'net-pos' : 'net-neg'; const s = r.net >= 0 ? '+' : ''; row.innerHTML = `<div style="font-family:monospace; color:#888;">${r.time}</div><div style="text-align:center;">${r.hits}/${r.total}</div><div style="text-align:right;" class="${c}">${s}$${r.net.toFixed(2)}</div>`; p.appendChild(row); }); }
+        function hideWinOverlay() { document.getElementById('winOverlay').classList.remove('show'); } // [REQ 3] Close Helper
+
+        // [REQ 3] History Pagination & Back to Top
+        let historyPageSize = 20;
+        let historyPage = 1;
+
+        function renderHistoryPanel() { 
+            const p = document.getElementById('historyContent'); // Changed container
+            if(state.history.length === 0) return; 
+            
+            // Only re-render full list if this is a fresh open or new item
+            // For simplicity, re-render visible slice
+            const visibleItems = state.history.slice(0, historyPageSize * historyPage);
+            
+            p.innerHTML = ''; 
+            visibleItems.forEach(r => { 
+                const row = document.createElement('div'); row.className = 'hist-row'; 
+                const c = r.net >= 0 ? 'net-pos' : 'net-neg'; 
+                const s = r.net >= 0 ? '+' : ''; 
+                row.innerHTML = `<div style="font-family:monospace; color:#888;">${r.time}</div><div style="text-align:center;">${r.hits}/${r.total}</div><div style="text-align:right;" class="${c}">${s}$${r.net.toFixed(2)}</div>`; 
+                p.appendChild(row); 
+            }); 
+            
+            // Add "Load More" trigger if needed, or just infinite scroll logic
+            // For now simple pagination via scroll
+        }
+
+        function checkScroll(el) {
+            const btn = document.getElementById('backToTop');
+            if (el.scrollTop > 100) btn.style.display = 'flex';
+            else btn.style.display = 'none';
+            
+            // Infinite scroll logic
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
+                if (state.history.length > historyPage * historyPageSize) {
+                    historyPage++;
+                    renderHistoryPanel();
+                }
+            }
+        }
+
+        function scrollToTop(event) {
+            // [FIX] Stop propagation to prevent closing the dropdown!
+            if (event) event.stopPropagation();
+            
+            // Scroll the inner container
+            document.querySelector('.history-scroll-container').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // FIX Issue 1 Revised: UI Logic to Handle Result vs Edit Mode Layering
         function updateUI() {
-            for (let i = 1; i <= TOTAL_NUMBERS; i++) { const b = document.getElementById(`ball-${i}`); b.className = 'ball'; if (state.selected.includes(i)) { b.classList.add('active-pick'); continue; } if (state.lastSelected.includes(i) && state.lastDrawn.includes(i)) { b.classList.add('hist-gold'); if(document.getElementById('statusMsg').innerText.includes("WON")) b.classList.add('pulsing'); continue; } if (state.lastSelected.includes(i) && !state.lastDrawn.includes(i)) { b.classList.add('hist-red'); continue; } if (state.lastDrawn.includes(i)) { b.classList.add('hist-drawn'); } }
-            const pc = document.getElementById('paytablePills'); pc.innerHTML = ''; const s = state.selected.length > 0 ? state.selected.length : (state.pickMode === 'random' ? state.sliderValue : (state.lastSelected.length || 1)); const t = PAYTABLES[s]; let wh = -1; if(!state.isPlaying && state.history.length > 0 && state.history[0].total === s) wh = state.history[0].hits;
+            const showBackgroundResults = state.isResultView;
+
+            for (let i = 1; i <= CONFIG.totalNumbers; i++) { 
+                const b = document.getElementById(`ball-${i}`); 
+                b.className = 'ball'; 
+                
+                // Priority 1: Current Selection (Blue) - Always active for new picks
+                if (state.selected.includes(i)) {
+                    b.classList.add('active-pick');
+                    continue; 
+                }
+
+                // Priority 2: Result Colors (Only if flag is active)
+                if (showBackgroundResults) {
+                    if (state.lastSelected.includes(i) && state.lastDrawn.includes(i)) { 
+                        b.classList.add('hist-gold'); 
+                        if(document.getElementById('statusMsg').innerText.includes("WON")) b.classList.add('pulsing'); 
+                        continue; 
+                    } 
+                    if (state.lastSelected.includes(i) && !state.lastDrawn.includes(i)) { 
+                        b.classList.add('hist-red'); 
+                        continue; 
+                    } 
+                    if (state.lastDrawn.includes(i)) { 
+                        b.classList.add('hist-drawn'); 
+                        continue;
+                    } 
+                } 
+            }
+            
+            const pc = document.getElementById('paytablePills'); pc.innerHTML = ''; 
+            const s = state.selected.length > 0 ? state.selected.length : (state.pickMode === 'random' ? state.sliderValue : (state.lastSelected.length || 1)); 
+            const t = CONFIG.paytables[s]; 
+            let wh = -1; 
+            // [UI FIX] Allow paytable highlight if we are in Result View OR not playing
+            // [UI 修复] 允许在结果视图或未播放时高亮赔率表
+            if((!state.isPlaying || state.isResultView) && state.history.length > 0 && state.history[0].total === s) wh = state.history[0].hits;
             if(t) { Object.keys(t).sort((a,b)=>a-b).forEach(h => { let m = t[h]; const p = document.createElement('div'); p.className = 'pay-pill'; if (parseInt(h) === wh) p.classList.add('active'); p.innerHTML = `<span class="pay-mult">${m}x</span><div class="pay-hit-circle">${h}</div>`; pc.appendChild(p); }); }
         }
-        function updateBalance() { document.getElementById('balance').innerText = `$${state.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; }
+        
+        function updateBalanceUI() { document.getElementById('balance').innerText = state.isLoggedIn ? `$${state.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : "Login"; }
     </script>
 </body>
+</html>
